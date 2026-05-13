@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Wallace OS — Segundo Cérebro</title>
+<meta name="description" content="Segundo cérebro com IA híbrida — Wallace OS"/>
+<meta name="theme-color" content="#05050d"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Wallace OS"/>
+<link rel="manifest" href="data:application/json,{
+  %22name%22:%22Wallace OS%22,
+  %22short_name%22:%22Wallace OS%22,
+  %22description%22:%22Segundo c%C3%A9rebro com IA h%C3%ADbridaWallace%22,
+  %22start_url%22:%22.%2F%22,
+  %22display%22:%22standalone%22,
+  %22background_color%22:%22%2305050d%22,
+  %22theme_color%22:%22%2305050d%22,
+  %22orientation%22:%22portrait-primary%22,
+  %22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2305050d'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle' fill='%23818cf8'%3E%E2%97%88%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any maskable%22}]
+}"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root {
+  --bg: #05050d;
+  --surface: #0a0a18;
+  --surface2: #0f0f20;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --text: #e2e2f0;
+  --muted: #3a3a5a;
+  --muted2: #555575;
+  --claude: #818cf8;
+  --gemini: #34d399;
+  --warn: #fb923c;
+  --danger: #f87171;
+  --font-display: 'Cabinet Grotesk', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:var(--font-display);color:var(--text);min-height:100vh;overflow-x:hidden}
+#root{min-height:100vh}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#1a1a30;border-radius:4px}
+
+/* ── LAYOUT ── */
+.os-shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;transition:width 0.3s ease;overflow:hidden}
+.sidebar.collapsed{width:60px}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.sidebar-logo{padding:0 18px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;white-space:nowrap;overflow:hidden}
+.logo-text{font-size:1.1rem;font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff 0%,#818cf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
+.sidebar.collapsed .logo-sub,.sidebar.collapsed .logo-text{display:none}
+.sidebar.collapsed .sidebar-logo{padding:0 0 20px;display:flex;justify-content:center}
+.sidebar.collapsed .logo-icon{display:block}
+.logo-icon{display:none;font-size:1.4rem}
+
+.nav-section{padding:0 10px;margin-bottom:8px}
+.nav-label{font-family:var(--font-mono);font-size:0.52rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:6px;white-space:nowrap;overflow:hidden}
+.sidebar.collapsed .nav-label{opacity:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:all 0.18s;border:1px solid transparent;width:100%;background:none;color:var(--text);font-family:var(--font-display);font-size:0.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,0.04);border-color:var(--border)}
+.nav-item.active{background:rgba(129,140,248,0.1);border-color:rgba(129,140,248,0.25);color:#a5b4fc}
+.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
+.nav-text{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sidebar.collapsed .nav-text,.sidebar.collapsed .nav-label{display:none}
+.nav-engine{font-family:var(--font-mono);font-size:0.48rem;padding:1px 5px;border-radius:4px;flex-shrink:0}
+.nav-engine.claude{color:var(--claude);background:rgba(129,140,248,0.12);border:1px solid rgba(129,140,248,0.2)}
+.nav-engine.gemini{color:var(--gemini);background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)}
+.sidebar.collapsed .nav-engine{display:none}
+
+.sidebar-bottom{margin-top:auto;padding:0 10px;border-top:1px solid var(--border);padding-top:16px}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(5,5,13,0.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:20;gap:16px}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-size:1.1rem;font-weight:800;letter-spacing:-0.02em}
+.topbar-engine{font-family:var(--font-mono);font-size:0.58rem;padding:3px 9px;border-radius:20px;border:1px solid}
+.topbar-engine.claude{color:var(--claude);border-color:rgba(129,140,248,0.3);background:rgba(129,140,248,0.08)}
+.topbar-engine.gemini{color:var(--gemini);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-btn{background:none;border:1px solid var(--border2);color:var(--muted2);padding:7px 13px;border-radius:8px;cursor:pointer;font-family:var(--font-mono);font-size:0.65rem;transition:all 0.2s;white-space:nowrap}
+.topbar-btn:hover{color:var(--text);border-color:#444}
+.topbar-btn.primary{background:var(--claude);color:#05050d;border-color:var(--claude);font-weight:500}
+.topbar-btn.primary:hover{filter:brightness(1.1)}
+
+/* ── PAGES ── */
+.page{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
+.page-full{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* HOME */
+.home-header{margin-bottom:32px}
+.home-greeting{font-size:2.2rem;font-weight:900;letter-spacing:-0.04em;line-height:1.1;margin-bottom:6px}
+.home-greeting span{background:linear-gradient(135deg,#fff 0%,var(--claude) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.home-sub{font-family:var(--font-mono);font-size:0.72rem;color:var(--muted2)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px}
+.stat-value{font-size:1.6rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:4px}
+.stat-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
+
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.qa-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all 0.22s;text-align:left;color:var(--text);font-family:var(--font-display);position:relative;overflow:hidden}
+.qa-card:hover{border-color:var(--accent,var(--claude));transform:translateY(-2px);background:var(--surface2)}
+.qa-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent,var(--claude)) 12%,transparent),transparent 70%);opacity:0;transition:opacity 0.3s}
+.qa-card:hover::before{opacity:1}
+.qa-icon{font-size:1.5rem;margin-bottom:10px}
+.qa-title{font-size:0.9rem;font-weight:700;margin-bottom:4px}
+.qa-desc{font-family:var(--font-mono);font-size:0.65rem;color:var(--muted2);line-height:1.5}
+
+.recent-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+.section-title{font-size:0.85rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title-mono{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
+.history-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.15s}
+.history-item:last-child{border-bottom:none;padding-bottom:0}
+.history-item:hover .history-preview{color:var(--text)}
+.history-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.history-content{flex:1;min-width:0}
+.history-module{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
+.history-preview{font-size:0.82rem;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color 0.15s}
+.history-time{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted);flex-shrink:0}
+.empty-history{font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);text-align:center;padding:24px 0}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:100%}
+.chat-context-bar{display:flex;align-items:center;gap:10px;padding:10px 24px;background:rgba(129,140,248,0.04);border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:0.65rem;color:var(--muted2);overflow-x:auto}
+.ctx-chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:3px 8px;white-space:nowrap;color:var(--muted2)}
+.ctx-chip.active{border-color:rgba(129,140,248,0.3);color:var(--claude)}
+.messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.empty-chat{margin:auto;text-align:center;padding:40px 20px}
+.empty-chat-icon{font-size:3rem;margin-bottom:14px}
+.empty-chat-title{font-size:1.2rem;font-weight:800;margin-bottom:6px}
+.empty-chat-sub{font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.suggestion-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.suggestion-pill{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:7px 14px;font-size:0.78rem;cursor:pointer;transition:all 0.18s;color:var(--muted2)}
+.suggestion-pill:hover{border-color:var(--claude);color:var(--claude);background:rgba(129,140,248,0.06)}
+
+.msg{display:flex;flex-direction:column;gap:4px;max-width:86%}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.assistant{align-self:flex-start}
+.msg-meta{font-family:var(--font-mono);font-size:0.56rem;color:var(--muted);padding:0 4px;display:flex;align-items:center;gap:6px}
+.msg-body{border-radius:14px;padding:13px 17px;font-size:0.88rem;line-height:1.7;border:1px solid}
+.msg.user .msg-body{background:rgba(255,255,255,0.06);border-color:var(--border2);border-bottom-right-radius:4px}
+.msg.assistant .msg-body{background:var(--surface);border-color:var(--border);border-bottom-left-radius:4px;border-left:2px solid var(--module-color,var(--claude))}
+.msg-heading{font-weight:800;font-size:0.95rem;margin:10px 0 4px;color:#fff}
+.msg-bullet{padding:2px 0;color:#bbb}
+.msg-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.msg-action-btn{background:none;border:1px solid var(--border);color:var(--muted2);padding:4px 10px;border-radius:6px;font-family:var(--font-mono);font-size:0.58rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
+.msg-action-btn:hover{border-color:var(--border2);color:var(--text)}
+
+.dots{display:flex;gap:4px;align-items:center;padding:6px 0}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--module-color,var(--claude));animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.18s}
+.dots span:nth-child(3){animation-delay:.36s}
+@keyframes bounce{0%,80%,100%{transform:scale(.55);opacity:.35}40%{transform:scale(1);opacity:1}}
+
+.input-area{padding:14px 24px 20px;border-top:1px solid var(--border);background:rgba(5,5,13,0.9);display:flex;flex-direction:column;gap:10px}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+.chat-ta{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font-display);font-size:0.88rem;padding:13px 15px;resize:none;outline:none;transition:border-color 0.2s;line-height:1.5}
+.chat-ta:focus{border-color:var(--module-color,var(--claude))}
+.chat-ta::placeholder{color:var(--muted)}
+.send-btn{background:var(--module-color,var(--claude));color:#05050d;border:none;border-radius:12px;width:46px;height:46px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.send-btn:hover:not(:disabled){filter:brightness(1.1);transform:scale(1.04)}
+.send-btn:disabled{opacity:.25;cursor:not-allowed}
+.input-tools{display:flex;gap:8px;align-items:center}
+.tool-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:7px;font-family:var(--font-mono);font-size:0.6rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
+.tool-btn:hover{border-color:var(--border2);color:var(--text)}
+.tool-btn.active{border-color:var(--claude);color:var(--claude);background:rgba(129,140,248,0.08)}
+
+/* PROFILE */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+.profile-card.full{grid-column:1/-1}
+.profile-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.profile-value{font-size:0.9rem;color:var(--text);font-weight:500}
+.profile-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-display);font-size:0.85rem;padding:10px 13px;outline:none;transition:border-color 0.2s;margin-top:6px}
+.profile-input:focus{border-color:var(--claude)}
+.profile-ta{resize:vertical;min-height:80px;font-family:var(--font-display);font-size:0.85rem}
+.save-btn{background:var(--claude);color:#05050d;border:none;border-radius:10px;padding:11px 24px;font-family:var(--font-display);font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:16px}
+.save-btn:hover{filter:brightness(1.1)}
+
+/* API KEYS */
+.keys-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px}
+.key-row{display:flex;align-items:center;gap:12px;margin-top:10px}
+.key-input{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:10px 13px;outline:none;transition:border-color 0.2s}
+.key-input:focus{border-color:var(--claude)}
+.key-status{font-family:var(--font-mono);font-size:0.6rem;padding:4px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
+.key-status.ok{color:var(--gemini);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
+.key-status.missing{color:var(--muted);border-color:var(--border)}
+
+/* MEMORY / HISTORY */
+.memory-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:all 0.15s}
+.memory-card:hover{border-color:var(--border2)}
+.memory-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.memory-module{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
+.memory-time{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted)}
+.memory-preview{font-size:0.82rem;color:var(--muted2);line-height:1.5}
+.memory-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.memory-tag{font-family:var(--font-mono);font-size:0.55rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted2)}
+.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;transition:color 0.15s;padding:2px 6px}
+.del-btn:hover{color:var(--danger)}
+
+/* FILE OUTPUT */
+.file-output{background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:12px 16px;margin-top:10px;display:flex;align-items:center;gap:12px}
+.file-icon{font-size:1.3rem}
+.file-info{flex:1}
+.file-name{font-family:var(--font-mono);font-size:0.75rem;color:var(--gemini);margin-bottom:2px}
+.file-size{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted)}
+.download-btn{background:var(--gemini);color:#05050d;border:none;border-radius:8px;padding:7px 14px;font-family:var(--font-mono);font-size:0.65rem;font-weight:500;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.download-btn:hover{filter:brightness(1.1)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:200;padding:24px}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:36px;max-width:500px;width:100%}
+.modal-title{font-size:1.4rem;font-weight:900;margin-bottom:6px}
+.modal-sub{font-family:var(--font-mono);font-size:0.68rem;color:var(--muted2);line-height:1.7;margin-bottom:24px}
+.modal-section{margin-bottom:18px}
+.modal-section-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.modal-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:12px 14px;outline:none;transition:border-color 0.2s}
+.modal-input:focus{border-color:var(--claude)}
+.modal-input.g:focus{border-color:var(--gemini)}
+.modal-btn{width:100%;background:var(--claude);color:#05050d;border:none;border-radius:10px;padding:13px;font-family:var(--font-display);font-size:0.95rem;font-weight:800;cursor:pointer;transition:all 0.2s;margin-top:6px}
+.modal-btn:hover{filter:brightness(1.1)}
+.modal-links{display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.modal-link{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted)}
+.modal-link a{color:var(--muted2);text-decoration:none}
+.modal-link a:hover{color:var(--text)}
+.modal-skip{background:none;border:none;color:var(--muted);font-family:var(--font-mono);font-size:0.6rem;cursor:pointer;width:100%;text-align:center;margin-top:10px;padding:6px;text-transform:uppercase;letter-spacing:0.06em;transition:color 0.2s}
+.modal-skip:hover{color:var(--muted2)}
+
+/* ANIMATIONS */
+@keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.anim-in{animation:cardIn 0.4s ease both}
+.fade-in{animation:fadeIn 0.3s ease both}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .sidebar{display:none}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .quick-actions{grid-template-columns:1fr 1fr}
+  .profile-grid{grid-template-columns:1fr}
+  .page{padding:16px}
+}
+@media(max-width:480px){
+  .quick-actions{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const MODULES=[
+  {id:"home",    label:"Início",       icon:"⌂",  nav:true, home:true},
+  {id:"financas",label:"Finanças",     icon:"₿",  engine:"claude", color:"#818cf8", nav:true,
+   desc:"Análise de gastos, investimentos e patrimônio",
+   suggestions:["Analise meus gastos deste mês","Como está meu patrimônio?","Onde posso cortar gastos?","Monte uma projeção de 12 meses"]},
+  {id:"relatorio",label:"Relatório NOV",icon:"⚙", engine:"claude", color:"#60a5fa", nav:true,
+   desc:"Relatórios executivos para liderança global",
+   suggestions:["Gerar relatório de horas diretas","Analise os bloqueios operacionais","Monte plano de ação para a semana","Calcule eficiência por setor"]},
+  {id:"metas",   label:"Metas",        icon:"◎",  engine:"claude", color:"#fb923c", nav:true,
+   desc:"Coach de evolução pessoal e profissional",
+   suggestions:["Como está meu progresso geral?","Quais são minhas 3 prioridades da semana?","Estou travado em fitness, o que fazer?","Revise meu plano de negócio"]},
+  {id:"saas",    label:"SaaS",         icon:"⚡", engine:"claude", color:"#f472b6", nav:true,
+   desc:"Validar lógica, features e estratégia do seu produto",
+   suggestions:["Revise este fluxo do N8N","Qual o melhor preço para o plano básico?","Que features aumentam retenção?","Como reduzir churn?"]},
+  {id:"conteudo",label:"Conteúdo",     icon:"✦",  engine:"gemini", color:"#34d399", nav:true,
+   desc:"Posts LinkedIn e Instagram prontos para publicar",
+   suggestions:["Post sobre liderança em offshore","Conteúdo sobre meu SaaS de finanças","História de superação profissional","Dica técnica de soldagem para engenheiros"]},
+  {id:"ingles",  label:"Inglês",       icon:"🇬🇧", engine:"gemini", color:"#fbbf24", nav:true,
+   desc:"Tutor interativo adaptado ao seu nível",
+   suggestions:["Practice: talk about my job at NOV","Correct my paragraph","Teach me business vocabulary","How to present results in English?"]},
+  {id:"memoria", label:"Memória",      icon:"◈",  nav:true, special:"memory"},
+  {id:"perfil",  label:"Perfil",       icon:"◉",  nav:true, special:"profile"},
+  {id:"config",  label:"Configurações",icon:"⚙",  nav:true, special:"config"},
+];
+
+const SYSTEM_PROMPTS={
+  financas:(profile)=>`Você é o assistente financeiro pessoal de ${profile.name||'Wallace'}, especializado no mercado brasileiro.
+PERFIL DO USUÁRIO: ${profile.financialContext||'Profissional de engenharia buscando independência financeira. Tem interesse em CDB, Tesouro Selic, LCI/LCA.'}
+INSTRUÇÕES: 1) Use o perfil para personalizar análises 2) Categorize gastos automaticamente 3) Aponte excessos com números reais 4) Sugira otimizações concretas 5) Projete patrimônio em 6, 12 e 24 meses 6) Quando relevante, ofereça gerar planilha Excel com os dados.
+Seja direto, use números, não amenize. Se o usuário pedir um relatório ou planilha, responda com [GERAR_EXCEL: título] no final.
+Responda em português brasileiro.`,
+
+  relatorio:(profile)=>`Você é especialista em gestão de operações industriais para ${profile.name||'Wallace'}, Líder de Oficina na NOV Brazil.
+CONTEXTO: Oficina de Reparo de Riser, equipe multi-turno, setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição.
+INSTRUÇÕES: 1) Organize dados em formato executivo 2) Calcule KPIs: eficiência, produtividade, desvios 3) Identifique bloqueios (ofensores) 4) Monte plano de ação com responsáveis e prazos 5) Formate para diretoria global.
+Quando o usuário pedir para gerar relatório, responda com [GERAR_HTML: título] no final.
+Responda em português brasileiro.`,
+
+  metas:(profile)=>`Você é o coach pessoal de ${profile.name||'Wallace'}.
+PERFIL E METAS: ${profile.goals||'Fitness, inglês fluente, SaaS de finanças no ar, carreira gerencial na NOV, independência financeira.'}
+HISTÓRICO RELEVANTE: ${profile.metasHistory||'Sem histórico ainda.'}
+INSTRUÇÕES: 1) Avalie progresso honestamente, sem elogios vazios 2) Identifique o maior bloqueio atual 3) Proponha 3 ações impactantes para a semana 4) Ajuste o plano se necessário 5) Seja direto como mentor experiente.
+Responda em português brasileiro.`,
+
+  saas:(profile)=>`Você é arquiteto de produtos SaaS e especialista em agentes de IA trabalhando com ${profile.name||'Wallace'}.
+PRODUTO: Gestão financeira pessoal via WhatsApp. Stack: N8N, Gemini, Evolution API, Google Sheets. Modelo: assinatura mensal. Mercado: Brasil.
+CONTEXTO: ${profile.saasContext||'Produto em desenvolvimento, foco em simplicidade e custo baixo para o usuário.'}
+INSTRUÇÕES: 1) Identifique falhas em fluxos descritos 2) Sugira melhorias em prompts e lógica 3) Aponte riscos de escalabilidade 4) Proponha features para retenção 5) Baseie precificação no mercado brasileiro.
+Quando o usuário pedir para documentar algo, use [GERAR_HTML: título].
+Responda em português brasileiro.`,
+
+  conteudo:(profile)=>`Você é estrategista de conteúdo para ${profile.name||'Wallace'}, engenheiro e empreendedor brasileiro.
+POSICIONAMENTO: Líder técnico em offshore/óleo e gás (NOV Brazil) + fundador de SaaS de finanças pessoais. Busca autoridade como líder técnico-empreendedor.
+INSTRUÇÕES: Para cada tema, gere:
+1) POST LINKEDIN: storytelling profissional, 150-200 palavras, call-to-action, sem hashtags em excesso
+2) LEGENDA INSTAGRAM: pessoal e engajante, 80-120 palavras, 5-8 hashtags estratégicas
+3) VARIAÇÃO: mesmo tema, ângulo diferente
+4) MELHOR HORÁRIO: dia e hora para postar
+Responda em português brasileiro.`,
+
+  ingles:(profile)=>`You are the English tutor for ${profile.name||'Wallace'}, a Brazilian engineering professional at NOV Brazil.
+USER LEVEL: ${profile.englishLevel||'Intermediate — understands written English well, struggles with fluency and business vocabulary.'}
+For each interaction:
+1) Respond naturally in English
+2) Correct any mistakes with brief explanation
+3) Teach 1-2 vocabulary words relevant to engineering or business
+4) Offer 1 practice sentence
+5) Be encouraging, practical, not academic.
+Note: user also builds a SaaS product — tech vocabulary is very relevant.`,
+};
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+const storage={
+  get:(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+};
+
+// ── GOOGLE SHEETS SYNC ────────────────────────────────────────────────────────
+const SHEETS_ID='15_d38sh-a3wGKxGphOMEmyy9dnbml4ZuIG3VH1SXHQU';
+const SHEETS_KEY='AIzaSyCsyeIBzFPi9ZjIZKcWiDfMQyi7JcKXnEA';
+const SHEETS_BASE=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}`;
+
+const sheets={
+  // Ensure sheet tab exists
+  async ensureSheet(name){
+    try{
+      const r=await fetch(`${SHEETS_BASE}?key=${SHEETS_KEY}`);
+      const d=await r.json();
+      const exists=d.sheets?.some(s=>s.properties.title===name);
+      if(!exists){
+        await fetch(`${SHEETS_BASE}:batchUpdate?key=${SHEETS_KEY}`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({requests:[{addSheet:{properties:{title:name}}}]})
+        });
+      }
+    }catch(e){console.warn('ensureSheet:',e)}
+  },
+
+  // Write a full range to a sheet (overwrites)
+  async write(sheetName,rows){
+    try{
+      await this.ensureSheet(sheetName);
+      await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW&key=${SHEETS_KEY}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({range:sheetName,majorDimension:'ROWS',values:rows})
+      });
+    }catch(e){console.warn('sheets.write:',e)}
+  },
+
+  // Append a single row
+  async append(sheetName,row){
+    try{
+      await this.ensureSheet(sheetName);
+      await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key=${SHEETS_KEY}`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({range:sheetName,majorDimension:'ROWS',values:[row]})
+      });
+    }catch(e){console.warn('sheets.append:',e)}
+  },
+
+  // Read all rows from a sheet
+  async read(sheetName){
+    try{
+      const r=await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}?key=${SHEETS_KEY}`);
+      const d=await r.json();
+      return d.values||[];
+    }catch(e){console.warn('sheets.read:',e);return[]}
+  },
+
+  // Sync profile to sheet
+  async syncProfile(profile){
+    const rows=[['chave','valor'],
+      ...Object.entries(profile).map(([k,v])=>[k,String(v||'')])
+    ];
+    await this.write('perfil',rows);
+  },
+
+  // Load profile from sheet
+  async loadProfile(){
+    const rows=await this.read('perfil');
+    if(rows.length<2)return null;
+    const obj={};
+    rows.slice(1).forEach(([k,v])=>{if(k)obj[k]=v||''});
+    return obj;
+  },
+
+  // Append history entry
+  async appendHistory(entry){
+    // Header row on first use handled by ensureSheet + first append
+    await this.append('historico',[
+      String(entry.ts),
+      entry.module,
+      entry.summary.replace(/
+/g,' '),
+      (entry.response||'').replace(/
+/g,' '),
+      new Date(entry.ts).toLocaleString('pt-BR')
+    ]);
+  },
+
+  // Load all history
+  async loadHistory(){
+    const rows=await this.read('historico');
+    return rows.filter(r=>r[0]&&!isNaN(Number(r[0]))).map(r=>({
+      ts:Number(r[0]),
+      module:r[1]||'',
+      summary:r[2]||'',
+      response:r[3]||'',
+    }));
+  },
+
+  // Delete history entry by ts
+  async deleteHistory(ts){
+    const rows=await this.read('historico');
+    const filtered=rows.filter(r=>String(r[0])!==String(ts));
+    await this.write('historico',filtered.length?filtered:[['ts','module','summary','response','data']]);
+  }
+};
+
+// ── API CALLERS ───────────────────────────────────────────────────────────────
+async function callClaude(messages,systemPrompt,apiKey){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:systemPrompt,messages}),
+  });
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.content?.[0]?.text||'Sem resposta.';
+}
+
+async function callGemini(messages,systemPrompt,apiKey){
+  const contents=messages.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system_instruction:{parts:[{text:systemPrompt}]},contents,generationConfig:{maxOutputTokens:1500}}),
+  });
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.candidates?.[0]?.content?.parts?.[0]?.text||'Sem resposta.';
+}
+
+// ── FILE GENERATORS ───────────────────────────────────────────────────────────
+function generateExcel(title,content){
+  // Simple CSV that opens in Excel
+  const rows=[['Wallace OS — '+title],['Gerado em',new Date().toLocaleString('pt-BR')],[''],
+    ...content.split('\n').filter(l=>l.trim()).map(l=>[l.replace(/[*#►▸]/g,'').trim()])
+  ];
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  return {blob,name:`${title.replace(/\s+/g,'_')}.csv`,type:'CSV/Excel'};
+}
+
+function generateHTML(title,content){
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>${title}</title>
+<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:40px auto;padding:0 24px;color:#1a1a2e;line-height:1.7}
+h1{color:#1e1e4a;border-bottom:3px solid #818cf8;padding-bottom:12px}
+h2{color:#2d2d6a;margin-top:28px}
+p{margin:8px 0}ul{padding-left:20px}li{margin:4px 0}
+.meta{color:#888;font-size:0.85rem;margin-bottom:24px}
+.tag{background:#f0f0ff;color:#4040aa;padding:2px 8px;border-radius:4px;font-size:0.8rem;margin:2px}
+</style></head><body>
+<h1>${title}</h1>
+<p class="meta">Gerado por Wallace OS em ${new Date().toLocaleString('pt-BR')}</p>
+${content.split('\n').map(l=>{
+  if(l.startsWith('# '))return`<h1>${l.slice(2)}</h1>`;
+  if(l.startsWith('## '))return`<h2>${l.slice(3)}</h2>`;
+  if(l.startsWith('### '))return`<h3>${l.slice(4)}</h3>`;
+  if(l.startsWith('- ')||l.startsWith('• '))return`<li>${l.slice(2)}</li>`;
+  if(l.match(/^\*\*/))return`<p><strong>${l.replace(/\*\*/g,'')}</strong></p>`;
+  if(l.trim()==='')return'<br/>';
+  return`<p>${l}</p>`;
+}).join('\n')}
+</body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  return{blob,name:`${title.replace(/\s+/g,'_')}.html`,type:'HTML'};
+}
+
+function downloadFile({blob,name}){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+// ── FORMAT MESSAGE ─────────────────────────────────────────────────────────
+function formatMsg(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/^### (.+)$/gm,'<div class="msg-heading" style="font-size:0.88rem">$1</div>')
+    .replace(/^## (.+)$/gm,'<div class="msg-heading">$1</div>')
+    .replace(/^# (.+)$/gm,'<div class="msg-heading" style="font-size:1.05rem">$1</div>')
+    .replace(/^[-•►▸]\s(.+)$/gm,'<div class="msg-bullet">▸ $1</div>')
+    .replace(/\n\n/g,'<br/><br/>')
+    .replace(/\n/g,'<br/>');
+}
+
+// ── TIME FORMAT ──────────────────────────────────────────────────────────────
+function timeAgo(ts){
+  const diff=(Date.now()-ts)/1000;
+  if(diff<60)return'agora';
+  if(diff<3600)return`${Math.floor(diff/60)}m`;
+  if(diff<86400)return`${Math.floor(diff/3600)}h`;
+  return new Date(ts).toLocaleDateString('pt-BR');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function FileOutput({file,onDownload}){
+  return(
+    <div className="file-output">
+      <span className="file-icon">📄</span>
+      <div className="file-info">
+        <div className="file-name">{file.name}</div>
+        <div className="file-size">{file.type} · clique para baixar</div>
+      </div>
+      <button className="download-btn" onClick={()=>onDownload(file)}>↓ Baixar</button>
+    </div>
+  );
+}
+
+// ── CHAT VIEW ────────────────────────────────────────────────────────────────
+function ChatView({module,profile,keys,allHistory,onSaveHistory}){
+  const [messages,setMessages]=useState(()=>{
+    const saved=storage.get(`chat_${module.id}`);
+    return saved||[];
+  });
+  const [input,setInput]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [files,setFiles]=useState({});
+  const [useMemory,setUseMemory]=useState(true);
+  const bottomRef=useRef(null);
+  const taRef=useRef(null);
+
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'})},[messages,loading]);
+  useEffect(()=>{storage.set(`chat_${module.id}`,messages.slice(-30))},[messages]);
+
+  const hasKey=module.engine==='claude'?!!keys.claudeKey:module.engine==='gemini'?!!keys.geminiKey:false;
+
+  function buildSystemPrompt(){
+    const base=SYSTEM_PROMPTS[module.id]?.(profile)||'';
+    if(!useMemory)return base;
+    const recent=allHistory.filter(h=>h.module===module.id).slice(-5);
+    if(!recent.length)return base;
+    const ctx=recent.map(h=>`[${new Date(h.ts).toLocaleDateString('pt-BR')}] ${h.summary}`).join('\n');
+    return base+`\n\nHISTÓRICO RECENTE DO USUÁRIO NESTE MÓDULO:\n${ctx}`;
+  }
+
+  async function send(text){
+    const msg=(text||input).trim();
+    if(!msg||loading||!hasKey)return;
+    setInput('');
+    const newMsgs=[...messages,{role:'user',content:msg}];
+    setMessages(newMsgs);
+    setLoading(true);
+    try{
+      const systemPrompt=buildSystemPrompt();
+      let reply;
+      if(module.engine==='claude') reply=await callClaude(newMsgs,systemPrompt,keys.claudeKey);
+      else reply=await callGemini(newMsgs,systemPrompt,keys.geminiKey);
+
+      // detect file generation commands
+      let fileObj=null;
+      if(reply.includes('[GERAR_EXCEL:')){
+        const t=reply.match(/\[GERAR_EXCEL:\s*(.+?)\]/)?.[1]||'Relatório';
+        fileObj=generateExcel(t,reply.replace(/\[GERAR_EXCEL:[^\]]+\]/g,''));
+      } else if(reply.includes('[GERAR_HTML:')){
+        const t=reply.match(/\[GERAR_HTML:\s*(.+?)\]/)?.[1]||'Documento';
+        fileObj=generateHTML(t,reply.replace(/\[GERAR_HTML:[^\]]+\]/g,''));
+      }
+
+      const cleanReply=reply.replace(/\[(GERAR_EXCEL|GERAR_HTML):[^\]]+\]/g,'').trim();
+      const msgId=Date.now();
+      if(fileObj)setFiles(f=>({...f,[msgId]:fileObj}));
+      const finalMsgs=[...newMsgs,{role:'assistant',content:cleanReply,id:msgId}];
+      setMessages(finalMsgs);
+
+      // save to history
+      onSaveHistory({
+        module:module.id,
+        ts:Date.now(),
+        summary:msg.slice(0,120),
+        response:cleanReply.slice(0,200),
+      });
+    } catch(e){
+      setMessages([...newMsgs,{role:'assistant',content:`⚠ Erro: ${e.message}`}]);
+    }
+    setLoading(false);
+  }
+
+  function clearChat(){
+    if(confirm('Limpar conversa?')){setMessages([]);storage.set(`chat_${module.id}`,[])}
+  }
+
+  function copyMsg(content){
+    navigator.clipboard.writeText(content).then(()=>{}).catch(()=>{});
+  }
+
+  return(
+    <div className="chat-wrap" style={{'--module-color':module.color||'var(--claude)'}}>
+      <div className="chat-context-bar">
+        <span className="ctx-chip active">{module.icon} {module.label}</span>
+        {useMemory&&<span className="ctx-chip active">◈ Memória ativa</span>}
+        <span className="ctx-chip">{module.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}</span>
+        {messages.length>0&&<span className="ctx-chip">{messages.length} mensagens</span>}
+      </div>
+
+      <div className="messages">
+        {messages.length===0&&(
+          <div className="empty-chat fade-in">
+            <div className="empty-chat-icon">{module.icon}</div>
+            <div className="empty-chat-title">{module.label}</div>
+            <div className="empty-chat-sub">{module.desc}<br/>{!hasKey&&<span style={{color:'var(--warn)'}}>⚠ Configure a chave {module.engine==='claude'?'Claude':'Gemini'} nas configurações</span>}</div>
+            <div className="suggestion-pills">
+              {(module.suggestions||[]).map((s,i)=>(
+                <button key={i} className="suggestion-pill" onClick={()=>send(s)}>{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {messages.map((m,i)=>(
+          <div key={i} className={`msg ${m.role} anim-in`} style={{animationDelay:`${Math.min(i*0.03,0.3)}s`}}>
+            <div className="msg-meta">
+              {m.role==='user'?'Você':(module.engine==='claude'?'Claude Sonnet':'Gemini Flash')}
+            </div>
+            <div className="msg-body" dangerouslySetInnerHTML={{__html:formatMsg(m.content)}}/>
+            {m.role==='assistant'&&(
+              <div className="msg-actions">
+                <button className="msg-action-btn" onClick={()=>copyMsg(m.content)}>⧉ Copiar</button>
+                {files[m.id]&&<button className="msg-action-btn" style={{color:'var(--gemini)',borderColor:'rgba(52,211,153,0.3)'}} onClick={()=>downloadFile(files[m.id])}>↓ Baixar arquivo</button>}
+                <button className="msg-action-btn" onClick={()=>send('Aprofunde esta resposta e seja mais detalhado')}>+ Detalhar</button>
+              </div>
+            )}
+            {m.role==='assistant'&&files[m.id]&&<FileOutput file={files[m.id]} onDownload={downloadFile}/>}
+          </div>
+        ))}
+
+        {loading&&(
+          <div className="msg assistant">
+            <div className="msg-meta">{module.engine==='claude'?'Claude Sonnet':'Gemini Flash'}</div>
+            <div className="msg-body"><div className="dots"><span/><span/><span/></div></div>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+
+      <div className="input-area">
+        <div className="input-tools">
+          <button className={`tool-btn ${useMemory?'active':''}`} onClick={()=>setUseMemory(v=>!v)}>
+            ◈ {useMemory?'Memória on':'Memória off'}
+          </button>
+          <button className="tool-btn" onClick={()=>send('Com base no que discutimos, gere um documento completo para baixar')}>
+            ↓ Gerar arquivo
+          </button>
+          {messages.length>0&&<button className="tool-btn" onClick={clearChat}>✕ Limpar</button>}
+        </div>
+        <div className="input-row">
+          <textarea
+            ref={taRef}
+            className="chat-ta"
+            placeholder={hasKey?`Mensagem para ${module.label}... (Enter para enviar)`:`Configure a chave ${module.engine==='claude'?'Claude':'Gemini'} nas configurações`}
+            value={input}
+            onChange={e=>setInput(e.target.value)}
+            onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
+            rows={2}
+            disabled={!hasKey||loading}
+          />
+          <button className="send-btn" onClick={()=>send()} disabled={!input.trim()||loading||!hasKey}>
+            {loading?'…':'→'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── HOME VIEW ────────────────────────────────────────────────────────────────
+function HomeView({profile,history,setActivePage}){
+  const [time,setTime]=useState(new Date());
+  useEffect(()=>{const t=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(t)},[]);
+
+  const hour=time.getHours();
+  const greeting=hour<12?'Bom dia':'Bom dia'||hour<18?'Boa tarde':'Boa noite';
+  const greetWord=hour<12?'Bom dia':hour<18?'Boa tarde':'Boa noite';
+
+  const totalChats=MODULES.filter(m=>m.engine).reduce((acc,m)=>{
+    const msgs=storage.get(`chat_${m.id}`)||[];
+    return acc+msgs.length;
+  },0);
+
+  const quickModules=MODULES.filter(m=>m.engine).slice(0,6);
+  const recentHistory=history.slice(-6).reverse();
+
+  return(
+    <div className="page anim-in">
+      <div className="home-header">
+        <div className="home-greeting"><span>{greetWord}, {profile.name||'Wallace'}</span></div>
+        <div className="home-sub">{time.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · {time.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+
+      <div className="stats-row">
+        {[
+          {label:'Conversas',value:Math.floor(totalChats/2)||0,color:'#818cf8'},
+          {label:'Memórias',value:history.length,color:'#34d399'},
+          {label:'Módulos',value:6,color:'#fb923c'},
+          {label:'Engines',value:2,color:'#f472b6'},
+        ].map((s,i)=>(
+          <div key={i} className="stat-card anim-in" style={{animationDelay:`${i*0.07}s`}}>
+            <div className="stat-value" style={{color:s.color}}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{fontSize:'0.7rem',fontFamily:'var(--font-mono)',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'10px'}}>Acesso rápido</div>
+      <div className="quick-actions" style={{marginBottom:28}}>
+        {quickModules.map((m,i)=>(
+          <button key={m.id} className="qa-card anim-in" style={{'--accent':m.color,animationDelay:`${i*0.06}s`}} onClick={()=>setActivePage(m.id)}>
+            <div className="qa-icon">{m.icon}</div>
+            <div className="qa-title">{m.label}</div>
+            <div className="qa-desc">{m.desc}</div>
+          </button>
+        ))}
+      </div>
+
+      <div className="recent-section">
+        <div className="section-title">
+          <span>Histórico recente</span>
+          <span className="section-title-mono">{history.length} entradas</span>
+        </div>
+        {recentHistory.length===0&&<div className="empty-history">Nenhuma conversa ainda. Escolha um módulo acima.</div>}
+        {recentHistory.map((h,i)=>{
+          const mod=MODULES.find(m=>m.id===h.module);
+          return(
+            <div key={i} className="history-item" onClick={()=>setActivePage(h.module)}>
+              <div className="history-dot" style={{background:mod?.color||'var(--muted)'}}/>
+              <div className="history-content">
+                <div className="history-module">{mod?.icon} {mod?.label}</div>
+                <div className="history-preview">{h.summary}</div>
+              </div>
+              <div className="history-time">{timeAgo(h.ts)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── MEMORY VIEW ──────────────────────────────────────────────────────────────
+function MemoryView({history,onDelete}){
+  const grouped={};
+  history.forEach(h=>{
+    if(!grouped[h.module])grouped[h.module]=[];
+    grouped[h.module].push(h);
+  });
+
+  return(
+    <div className="page anim-in">
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:'1.4rem',fontWeight:900,marginBottom:4}}>◈ Memória</div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--muted2)'}}>
+          {history.length} entradas · salvas localmente no seu navegador
+        </div>
+      </div>
+      {history.length===0&&<div className="empty-history" style={{textAlign:'left'}}>Nenhuma memória ainda. Comece a usar os módulos.</div>}
+      {Object.entries(grouped).map(([modId,items])=>{
+        const mod=MODULES.find(m=>m.id===modId);
+        return(
+          <div key={modId} style={{marginBottom:24}}>
+            <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
+              <span>{mod?.icon}</span> {mod?.label} ({items.length})
+            </div>
+            {items.slice().reverse().map((h,i)=>(
+              <div key={i} className="memory-card">
+                <div className="memory-header">
+                  <div className="memory-time">{new Date(h.ts).toLocaleString('pt-BR')}</div>
+                  <button className="del-btn" onClick={()=>onDelete(h.ts)}>✕</button>
+                </div>
+                <div className="memory-preview"><strong>Você:</strong> {h.summary}</div>
+                {h.response&&<div className="memory-preview" style={{marginTop:4,opacity:0.7}}><strong>IA:</strong> {h.response}</div>}
+              </div>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── PROFILE VIEW ─────────────────────────────────────────────────────────────
+function ProfileView({profile,onSave}){
+  const [form,setForm]=useState(profile);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  return(
+    <div className="page anim-in">
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:'1.4rem',fontWeight:900,marginBottom:4}}>◉ Perfil</div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--muted2)'}}>
+          Quanto mais completo, mais personalizado o segundo cérebro
+        </div>
+      </div>
+      <div className="profile-grid">
+        {[
+          {k:'name',label:'Nome',ph:'Wallace Morais'},
+          {k:'role',label:'Cargo / Função',ph:'Workshop Leader — NOV Brazil'},
+          {k:'englishLevel',label:'Nível de inglês',ph:'Intermediário — lê bem, fala com dificuldade'},
+        ].map(({k,label,ph})=>(
+          <div key={k} className="profile-card">
+            <div className="profile-label">{label}</div>
+            <input className="profile-input" value={form[k]||''} onChange={e=>set(k,e.target.value)} placeholder={ph}/>
+          </div>
+        ))}
+        {[
+          {k:'goals',label:'Metas de vida (seja detalhado)',ph:'Fitness 3x semana, inglês fluente em 12 meses, SaaS com 50 clientes, promovido a gerente em 2026...'},
+          {k:'financialContext',label:'Contexto financeiro',ph:'Renda mensal, gastos fixos, investimentos atuais, patrimônio, metas...'},
+          {k:'saasContext',label:'Contexto do SaaS',ph:'Estágio atual, número de clientes, principais desafios, próximos passos...'},
+        ].map(({k,label,ph})=>(
+          <div key={k} className="profile-card full">
+            <div className="profile-label">{label}</div>
+            <textarea className="profile-input profile-ta" value={form[k]||''} onChange={e=>set(k,e.target.value)} placeholder={ph}/>
+          </div>
+        ))}
+      </div>
+      <button className="save-btn" onClick={()=>onSave(form)}>Salvar perfil</button>
+    </div>
+  );
+}
+
+// ── CONFIG VIEW ───────────────────────────────────────────────────────────────
+function ConfigView({keys,onSave}){
+  const [form,setForm]=useState(keys);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  return(
+    <div className="page anim-in">
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:'1.4rem',fontWeight:900,marginBottom:4}}>⚙ Configurações</div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--muted2)'}}>
+          Chaves salvas localmente · nunca enviadas a terceiros
+        </div>
+      </div>
+
+      <div className="keys-card">
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--claude)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
+          <span style={{width:8,height:8,borderRadius:'50%',background:'var(--claude)',display:'inline-block'}}/>
+          Claude Sonnet 4 — Finanças, NOV, Metas, SaaS
+        </div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.68rem',color:'var(--muted2)',marginBottom:10,lineHeight:1.6}}>
+          Obter em: console.anthropic.com → API Keys
+        </div>
+        <div className="key-row">
+          <input className="key-input" type="password" placeholder="sk-ant-..." value={form.claudeKey||''} onChange={e=>set('claudeKey',e.target.value)}/>
+          <span className={`key-status ${form.claudeKey?.startsWith('sk-')?'ok':'missing'}`}>
+            {form.claudeKey?.startsWith('sk-')?'✓ OK':'Não configurado'}
+          </span>
+        </div>
+      </div>
+
+      <div className="keys-card">
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--gemini)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
+          <span style={{width:8,height:8,borderRadius:'50%',background:'var(--gemini)',display:'inline-block'}}/>
+          Gemini 1.5 Flash — Conteúdo, Inglês
+        </div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.68rem',color:'var(--muted2)',marginBottom:10,lineHeight:1.6}}>
+          Obter em: aistudio.google.com/app/apikey (gratuito)
+        </div>
+        <div className="key-row">
+          <input className="key-input" type="password" placeholder="AIza..." value={form.geminiKey||''} onChange={e=>set('geminiKey',e.target.value)}/>
+          <span className={`key-status ${form.geminiKey?.length>10?'ok':'missing'}`}>
+            {form.geminiKey?.length>10?'✓ OK':'Não configurado'}
+          </span>
+        </div>
+      </div>
+
+      <button className="save-btn" onClick={()=>onSave(form)}>Salvar chaves</button>
+
+      <div style={{marginTop:28,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:20}}>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.6rem',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12}}>Custo estimado por mês</div>
+        {[
+          {label:'100 msgs nos módulos críticos (Claude)',cost:'~R$ 4,50'},
+          {label:'100 msgs nos módulos ágeis (Gemini)',cost:'~R$ 0,50'},
+          {label:'Total estimado (uso moderado)',cost:'~R$ 5/mês'},
+          {label:'GitHub + Vercel (hospedagem)',cost:'Gratuito'},
+          {label:'Google Sheets (memória sync)',cost:'Gratuito'},
+        ].map((r,i)=>(
+          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)',fontFamily:'var(--font-mono)',fontSize:'0.72rem'}}>
+            <span style={{color:'var(--muted2)'}}>{r.label}</span>
+            <span style={{color:'var(--text)',fontWeight:500}}>{r.cost}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── FIRST RUN MODAL ───────────────────────────────────────────────────────────
+function FirstRunModal({onComplete}){
+  const [step,setStep]=useState(0);
+  const [name,setName]=useState('');
+  const [claudeKey,setClaudeKey]=useState('');
+  const [geminiKey,setGeminiKey]=useState('');
+
+  function finish(){
+    onComplete({name,claudeKey,geminiKey});
+  }
+
+  return(
+    <div className="modal-overlay">
+      <div className="modal fade-in">
+        {step===0&&(
+          <>
+            <div className="modal-title">Bem-vindo ao Wallace OS</div>
+            <div className="modal-sub">Seu segundo cérebro com IA híbrida.<br/>Lembra de tudo. Gera arquivos. Evolui com você.<br/><br/>Vamos configurar em 2 passos rápidos.</div>
+            <div className="modal-section">
+              <div className="modal-section-label">Como devo te chamar?</div>
+              <input className="modal-input" placeholder="Seu nome..." value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&name&&setStep(1)}/>
+            </div>
+            <button className="modal-btn" onClick={()=>setStep(1)} disabled={!name.trim()}>Continuar →</button>
+          </>
+        )}
+        {step===1&&(
+          <>
+            <div className="modal-title">🔑 Configurar APIs</div>
+            <div className="modal-sub">Configure uma ou ambas. Pode adicionar depois em Configurações.</div>
+            <div className="modal-section">
+              <div className="modal-section-label">
+                <span style={{width:7,height:7,borderRadius:'50%',background:'var(--claude)',display:'inline-block'}}/>
+                Claude Sonnet 4 (módulos críticos)
+              </div>
+              <input className="modal-input" type="password" placeholder="sk-ant-..." value={claudeKey} onChange={e=>setClaudeKey(e.target.value)}/>
+            </div>
+            <div className="modal-section">
+              <div className="modal-section-label">
+                <span style={{width:7,height:7,borderRadius:'50%',background:'var(--gemini)',display:'inline-block'}}/>
+                Gemini 1.5 Flash (conteúdo e inglês)
+              </div>
+              <input className="modal-input g" type="password" placeholder="AIza..." value={geminiKey} onChange={e=>setGeminiKey(e.target.value)}/>
+            </div>
+            <button className="modal-btn" onClick={finish} disabled={!claudeKey&&!geminiKey}>Entrar no OS</button>
+            <div className="modal-links">
+              <div className="modal-link">Claude: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+              <div className="modal-link">Gemini: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></div>
+            </div>
+            <button className="modal-skip" onClick={finish}>Pular — configurar depois</button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════════════════
+function App(){
+  const [activePage,setActivePage]=useState('home');
+  const [firstRun,setFirstRun]=useState(()=>!storage.get('wos_initialized'));
+  const [sidebarOpen,setSidebarOpen]=useState(true);
+  const [profile,setProfile]=useState(()=>storage.get('wos_profile')||{name:'',role:'',goals:'',financialContext:'',saasContext:'',englishLevel:''});
+  const [keys,setKeys]=useState(()=>storage.get('wos_keys')||{claudeKey:'',geminiKey:''});
+  const [history,setHistory]=useState(()=>storage.get('wos_history')||[]);
+  const [syncStatus,setSyncStatus]=useState('idle'); // idle | syncing | synced | error
+
+  // Load from Sheets on startup (merges with local)
+  useEffect(()=>{
+    setSyncStatus('syncing');
+    Promise.all([sheets.loadProfile(),sheets.loadHistory()])
+      .then(([remoteProfile,remoteHistory])=>{
+        if(remoteProfile&&Object.keys(remoteProfile).length>0){
+          const merged={...(storage.get('wos_profile')||{}), ...remoteProfile};
+          setProfile(merged);storage.set('wos_profile',merged);
+        }
+        if(remoteHistory&&remoteHistory.length>0){
+          // Merge: keep all unique entries by ts
+          const local=storage.get('wos_history')||[];
+          const tsSet=new Set(local.map(x=>x.ts));
+          const merged=[...local,...remoteHistory.filter(x=>!tsSet.has(x.ts))].slice(-200);
+          merged.sort((a,b)=>a.ts-b.ts);
+          setHistory(merged);storage.set('wos_history',merged);
+        }
+        setSyncStatus('synced');
+      })
+      .catch(()=>setSyncStatus('error'));
+  },[]);
+
+  function handleFirstRun({name,claudeKey,geminiKey}){
+    const p={...profile,name};
+    const k={claudeKey,geminiKey};
+    setProfile(p);setKeys(k);
+    storage.set('wos_profile',p);
+    storage.set('wos_keys',k);
+    storage.set('wos_initialized',true);
+    setFirstRun(false);
+    // Sync profile to Sheets on first run
+    sheets.syncProfile(p).catch(()=>{});
+  }
+
+  function saveProfile(p){
+    setProfile(p);storage.set('wos_profile',p);
+    sheets.syncProfile(p)
+      .then(()=>alert('Perfil salvo e sincronizado com Google Sheets! ✓'))
+      .catch(()=>alert('Perfil salvo localmente. Sincronização pendente.'));
+  }
+
+  function saveKeys(k){
+    setKeys(k);storage.set('wos_keys',k);
+    alert('Chaves salvas!');
+  }
+
+  function saveHistory(entry){
+    const h=[...history,entry].slice(-200);
+    setHistory(h);storage.set('wos_history',h);
+    // Async sync to Sheets — fire and forget
+    sheets.appendHistory(entry).catch(()=>{});
+  }
+
+  function deleteHistory(ts){
+    const h=history.filter(x=>x.ts!==ts);
+    setHistory(h);storage.set('wos_history',h);
+    sheets.deleteHistory(ts).catch(()=>{});
+  }
+
+  const activeModule=MODULES.find(m=>m.id===activePage)||MODULES[0];
+  const isChatPage=!!activeModule.engine;
+
+  function renderContent(){
+    if(activePage==='home')return <HomeView profile={profile} history={history} setActivePage={setActivePage}/>;
+    if(activePage==='memoria')return <MemoryView history={history} onDelete={deleteHistory}/>;
+    if(activePage==='perfil')return <ProfileView profile={profile} onSave={saveProfile}/>;
+    if(activePage==='config')return <ConfigView keys={keys} onSave={saveKeys}/>;
+    if(isChatPage)return <ChatView key={activePage} module={activeModule} profile={profile} keys={keys} allHistory={history} onSaveHistory={saveHistory}/>;
+    return null;
+  }
+
+  return(
+    <>
+      {firstRun&&<FirstRunModal onComplete={handleFirstRun}/>}
+      <div className="os-shell">
+        {/* SIDEBAR */}
+        <div className={`sidebar ${sidebarOpen?'':'collapsed'}`}>
+          <div className="sidebar-logo">
+            <span className="logo-icon">◈</span>
+            <div className="logo-text">Wallace OS</div>
+            <div className="logo-sub">Segundo Cérebro</div>
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-label">Sistema</div>
+            {MODULES.filter(m=>m.home||m.special==='memory').map(m=>(
+              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
+                <span className="nav-icon">{m.icon}</span>
+                <span className="nav-text">{m.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-label">Módulos Claude</div>
+            {MODULES.filter(m=>m.engine==='claude').map(m=>(
+              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
+                <span className="nav-icon">{m.icon}</span>
+                <span className="nav-text">{m.label}</span>
+                <span className="nav-engine claude">S4</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-label">Módulos Gemini</div>
+            {MODULES.filter(m=>m.engine==='gemini').map(m=>(
+              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
+                <span className="nav-icon">{m.icon}</span>
+                <span className="nav-text">{m.label}</span>
+                <span className="nav-engine gemini">G2</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="sidebar-bottom">
+            {MODULES.filter(m=>m.special==='profile'||m.special==='config').map(m=>(
+              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
+                <span className="nav-icon">{m.icon}</span>
+                <span className="nav-text">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* MAIN */}
+        <div className="main">
+          <div className="topbar">
+            <div className="topbar-left">
+              <button className="topbar-btn" onClick={()=>setSidebarOpen(v=>!v)} style={{padding:'7px 10px'}}>☰</button>
+              <span className="topbar-title">{activeModule.label}</span>
+              {activeModule.engine&&(
+                <span className={`topbar-engine ${activeModule.engine}`}>
+                  {activeModule.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}
+                </span>
+              )}
+            </div>
+            <div className="topbar-right">
+              {syncStatus==='syncing'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--muted)',display:'flex',alignItems:'center',gap:5}}><span style={{animation:'pulse 1s infinite',display:'inline-block',width:6,height:6,borderRadius:'50%',background:'var(--muted)'}}/>sync</span>}
+              {syncStatus==='synced'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--gemini)'}}>✓ sync</span>}
+              {syncStatus==='error'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--warn)'}}>⚠ offline</span>}
+              {!keys.claudeKey&&<button className="topbar-btn" onClick={()=>setActivePage('config')} style={{color:'var(--warn)',borderColor:'rgba(251,146,60,0.3)'}}>⚠ Configurar API</button>}
+              {profile.name&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.65rem',color:'var(--muted2)'}}>{profile.name}</span>}
+            </div>
+          </div>
+
+          {isChatPage
+            ?<div style={{flex:1,overflow:'hidden',display:'flex',flexDirection:'column'}}>{renderContent()}</div>
+            :<div style={{flex:1,overflowY:'auto'}}>{renderContent()}</div>
+          }
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<style>
+/* PWA / Mobile polish */
+@media(max-width:700px){
+  .sidebar{display:none!important}
+  .topbar{padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
+  .page{padding:16px;padding-bottom:max(80px,env(safe-area-inset-bottom))}
+  .messages{padding:16px;padding-bottom:80px}
+  .input-area{padding:10px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .quick-actions{grid-template-columns:1fr 1fr}
+  .profile-grid{grid-template-columns:1fr}
+  .mobile-nav{display:flex!important}
+}
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(5,5,13,0.97);
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding:8px 0;
+  padding-bottom:max(8px,env(safe-area-inset-bottom));
+  z-index:50;
+  justify-content:space-around;
+  align-items:center;
+  backdrop-filter:blur(20px);
+}
+.mnav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;color:#3a3a5a;
+  font-family:'DM Mono',monospace;font-size:0.48rem;
+  text-transform:uppercase;letter-spacing:0.05em;
+  cursor:pointer;padding:6px 8px;border-radius:8px;
+  transition:all 0.18s;min-width:48px;
+}
+.mnav-btn.active{color:#818cf8}
+.mnav-btn span:first-child{font-size:1.3rem}
+</style>
+<script>
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>new Response('Offline')))}});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+<\/script>
+</body>
+</html>
