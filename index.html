@@ -2,8 +2,25 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Wallace OS — Segundo Cérebro</title>
+<meta name="description" content="Segundo cérebro com IA híbrida — Wallace OS"/>
+<meta name="theme-color" content="#05050d"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Wallace OS"/>
+<link rel="manifest" href="data:application/json,{
+  %22name%22:%22Wallace OS%22,
+  %22short_name%22:%22Wallace OS%22,
+  %22description%22:%22Segundo c%C3%A9rebro com IA h%C3%ADbridaWallace%22,
+  %22start_url%22:%22.%2F%22,
+  %22display%22:%22standalone%22,
+  %22background_color%22:%22%2305050d%22,
+  %22theme_color%22:%22%2305050d%22,
+  %22orientation%22:%22portrait-primary%22,
+  %22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2305050d'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle' fill='%23818cf8'%3E%E2%97%88%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any maskable%22}]
+}"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -327,6 +344,111 @@ const storage={
   set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
 };
 
+// ── GOOGLE SHEETS SYNC ────────────────────────────────────────────────────────
+const SHEETS_ID='15_d38sh-a3wGKxGphOMEmyy9dnbml4ZuIG3VH1SXHQU';
+const SHEETS_KEY='AIzaSyCsyeIBzFPi9ZjIZKcWiDfMQyi7JcKXnEA';
+const SHEETS_BASE=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}`;
+
+const sheets={
+  // Ensure sheet tab exists
+  async ensureSheet(name){
+    try{
+      const r=await fetch(`${SHEETS_BASE}?key=${SHEETS_KEY}`);
+      const d=await r.json();
+      const exists=d.sheets?.some(s=>s.properties.title===name);
+      if(!exists){
+        await fetch(`${SHEETS_BASE}:batchUpdate?key=${SHEETS_KEY}`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({requests:[{addSheet:{properties:{title:name}}}]})
+        });
+      }
+    }catch(e){console.warn('ensureSheet:',e)}
+  },
+
+  // Write a full range to a sheet (overwrites)
+  async write(sheetName,rows){
+    try{
+      await this.ensureSheet(sheetName);
+      await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW&key=${SHEETS_KEY}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({range:sheetName,majorDimension:'ROWS',values:rows})
+      });
+    }catch(e){console.warn('sheets.write:',e)}
+  },
+
+  // Append a single row
+  async append(sheetName,row){
+    try{
+      await this.ensureSheet(sheetName);
+      await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key=${SHEETS_KEY}`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({range:sheetName,majorDimension:'ROWS',values:[row]})
+      });
+    }catch(e){console.warn('sheets.append:',e)}
+  },
+
+  // Read all rows from a sheet
+  async read(sheetName){
+    try{
+      const r=await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}?key=${SHEETS_KEY}`);
+      const d=await r.json();
+      return d.values||[];
+    }catch(e){console.warn('sheets.read:',e);return[]}
+  },
+
+  // Sync profile to sheet
+  async syncProfile(profile){
+    const rows=[['chave','valor'],
+      ...Object.entries(profile).map(([k,v])=>[k,String(v||'')])
+    ];
+    await this.write('perfil',rows);
+  },
+
+  // Load profile from sheet
+  async loadProfile(){
+    const rows=await this.read('perfil');
+    if(rows.length<2)return null;
+    const obj={};
+    rows.slice(1).forEach(([k,v])=>{if(k)obj[k]=v||''});
+    return obj;
+  },
+
+  // Append history entry
+  async appendHistory(entry){
+    // Header row on first use handled by ensureSheet + first append
+    await this.append('historico',[
+      String(entry.ts),
+      entry.module,
+      entry.summary.replace(/
+/g,' '),
+      (entry.response||'').replace(/
+/g,' '),
+      new Date(entry.ts).toLocaleString('pt-BR')
+    ]);
+  },
+
+  // Load all history
+  async loadHistory(){
+    const rows=await this.read('historico');
+    return rows.filter(r=>r[0]&&!isNaN(Number(r[0]))).map(r=>({
+      ts:Number(r[0]),
+      module:r[1]||'',
+      summary:r[2]||'',
+      response:r[3]||'',
+    }));
+  },
+
+  // Delete history entry by ts
+  async deleteHistory(ts){
+    const rows=await this.read('historico');
+    const filtered=rows.filter(r=>String(r[0])!==String(ts));
+    await this.write('historico',filtered.length?filtered:[['ts','module','summary','response','data']]);
+  }
+};
+
 // ── API CALLERS ───────────────────────────────────────────────────────────────
 async function callClaude(messages,systemPrompt,apiKey){
   const r=await fetch('https://api.anthropic.com/v1/messages',{
@@ -341,7 +463,7 @@ async function callClaude(messages,systemPrompt,apiKey){
 
 async function callGemini(messages,systemPrompt,apiKey){
   const contents=messages.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({system_instruction:{parts:[{text:systemPrompt}]},contents,generationConfig:{maxOutputTokens:1500}}),
@@ -515,7 +637,7 @@ function ChatView({module,profile,keys,allHistory,onSaveHistory}){
       <div className="chat-context-bar">
         <span className="ctx-chip active">{module.icon} {module.label}</span>
         {useMemory&&<span className="ctx-chip active">◈ Memória ativa</span>}
-        <span className="ctx-chip">{module.engine==='claude'?'Claude Sonnet 4':'Gemini 2.0 Flash'}</span>
+        <span className="ctx-chip">{module.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}</span>
         {messages.length>0&&<span className="ctx-chip">{messages.length} mensagens</span>}
       </div>
 
@@ -776,7 +898,7 @@ function ConfigView({keys,onSave}){
       <div className="keys-card">
         <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--gemini)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
           <span style={{width:8,height:8,borderRadius:'50%',background:'var(--gemini)',display:'inline-block'}}/>
-          Gemini 2.0 Flash — Conteúdo, Inglês
+          Gemini 1.5 Flash — Conteúdo, Inglês
         </div>
         <div style={{fontFamily:'var(--font-mono)',fontSize:'0.68rem',color:'var(--muted2)',marginBottom:10,lineHeight:1.6}}>
           Obter em: aistudio.google.com/app/apikey (gratuito)
@@ -798,6 +920,7 @@ function ConfigView({keys,onSave}){
           {label:'100 msgs nos módulos ágeis (Gemini)',cost:'~R$ 0,50'},
           {label:'Total estimado (uso moderado)',cost:'~R$ 5/mês'},
           {label:'GitHub + Vercel (hospedagem)',cost:'Gratuito'},
+          {label:'Google Sheets (memória sync)',cost:'Gratuito'},
         ].map((r,i)=>(
           <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)',fontFamily:'var(--font-mono)',fontSize:'0.72rem'}}>
             <span style={{color:'var(--muted2)'}}>{r.label}</span>
@@ -848,7 +971,7 @@ function FirstRunModal({onComplete}){
             <div className="modal-section">
               <div className="modal-section-label">
                 <span style={{width:7,height:7,borderRadius:'50%',background:'var(--gemini)',display:'inline-block'}}/>
-                Gemini 2.0 Flash (conteúdo e inglês)
+                Gemini 1.5 Flash (conteúdo e inglês)
               </div>
               <input className="modal-input g" type="password" placeholder="AIza..." value={geminiKey} onChange={e=>setGeminiKey(e.target.value)}/>
             </div>
@@ -875,6 +998,29 @@ function App(){
   const [profile,setProfile]=useState(()=>storage.get('wos_profile')||{name:'',role:'',goals:'',financialContext:'',saasContext:'',englishLevel:''});
   const [keys,setKeys]=useState(()=>storage.get('wos_keys')||{claudeKey:'',geminiKey:''});
   const [history,setHistory]=useState(()=>storage.get('wos_history')||[]);
+  const [syncStatus,setSyncStatus]=useState('idle'); // idle | syncing | synced | error
+
+  // Load from Sheets on startup (merges with local)
+  useEffect(()=>{
+    setSyncStatus('syncing');
+    Promise.all([sheets.loadProfile(),sheets.loadHistory()])
+      .then(([remoteProfile,remoteHistory])=>{
+        if(remoteProfile&&Object.keys(remoteProfile).length>0){
+          const merged={...(storage.get('wos_profile')||{}), ...remoteProfile};
+          setProfile(merged);storage.set('wos_profile',merged);
+        }
+        if(remoteHistory&&remoteHistory.length>0){
+          // Merge: keep all unique entries by ts
+          const local=storage.get('wos_history')||[];
+          const tsSet=new Set(local.map(x=>x.ts));
+          const merged=[...local,...remoteHistory.filter(x=>!tsSet.has(x.ts))].slice(-200);
+          merged.sort((a,b)=>a.ts-b.ts);
+          setHistory(merged);storage.set('wos_history',merged);
+        }
+        setSyncStatus('synced');
+      })
+      .catch(()=>setSyncStatus('error'));
+  },[]);
 
   function handleFirstRun({name,claudeKey,geminiKey}){
     const p={...profile,name};
@@ -884,11 +1030,15 @@ function App(){
     storage.set('wos_keys',k);
     storage.set('wos_initialized',true);
     setFirstRun(false);
+    // Sync profile to Sheets on first run
+    sheets.syncProfile(p).catch(()=>{});
   }
 
   function saveProfile(p){
     setProfile(p);storage.set('wos_profile',p);
-    alert('Perfil salvo! O segundo cérebro agora te conhece melhor.');
+    sheets.syncProfile(p)
+      .then(()=>alert('Perfil salvo e sincronizado com Google Sheets! ✓'))
+      .catch(()=>alert('Perfil salvo localmente. Sincronização pendente.'));
   }
 
   function saveKeys(k){
@@ -899,11 +1049,14 @@ function App(){
   function saveHistory(entry){
     const h=[...history,entry].slice(-200);
     setHistory(h);storage.set('wos_history',h);
+    // Async sync to Sheets — fire and forget
+    sheets.appendHistory(entry).catch(()=>{});
   }
 
   function deleteHistory(ts){
     const h=history.filter(x=>x.ts!==ts);
     setHistory(h);storage.set('wos_history',h);
+    sheets.deleteHistory(ts).catch(()=>{});
   }
 
   const activeModule=MODULES.find(m=>m.id===activePage)||MODULES[0];
@@ -980,11 +1133,14 @@ function App(){
               <span className="topbar-title">{activeModule.label}</span>
               {activeModule.engine&&(
                 <span className={`topbar-engine ${activeModule.engine}`}>
-                  {activeModule.engine==='claude'?'Claude Sonnet 4':'Gemini 2.0 Flash'}
+                  {activeModule.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}
                 </span>
               )}
             </div>
             <div className="topbar-right">
+              {syncStatus==='syncing'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--muted)',display:'flex',alignItems:'center',gap:5}}><span style={{animation:'pulse 1s infinite',display:'inline-block',width:6,height:6,borderRadius:'50%',background:'var(--muted)'}}/>sync</span>}
+              {syncStatus==='synced'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--gemini)'}}>✓ sync</span>}
+              {syncStatus==='error'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--warn)'}}>⚠ offline</span>}
               {!keys.claudeKey&&<button className="topbar-btn" onClick={()=>setActivePage('config')} style={{color:'var(--warn)',borderColor:'rgba(251,146,60,0.3)'}}>⚠ Configurar API</button>}
               {profile.name&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.65rem',color:'var(--muted2)'}}>{profile.name}</span>}
             </div>
@@ -1002,5 +1158,49 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
+
+<style>
+/* PWA / Mobile polish */
+@media(max-width:700px){
+  .sidebar{display:none!important}
+  .topbar{padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
+  .page{padding:16px;padding-bottom:max(80px,env(safe-area-inset-bottom))}
+  .messages{padding:16px;padding-bottom:80px}
+  .input-area{padding:10px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .quick-actions{grid-template-columns:1fr 1fr}
+  .profile-grid{grid-template-columns:1fr}
+  .mobile-nav{display:flex!important}
+}
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(5,5,13,0.97);
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding:8px 0;
+  padding-bottom:max(8px,env(safe-area-inset-bottom));
+  z-index:50;
+  justify-content:space-around;
+  align-items:center;
+  backdrop-filter:blur(20px);
+}
+.mnav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;color:#3a3a5a;
+  font-family:'DM Mono',monospace;font-size:0.48rem;
+  text-transform:uppercase;letter-spacing:0.05em;
+  cursor:pointer;padding:6px 8px;border-radius:8px;
+  transition:all 0.18s;min-width:48px;
+}
+.mnav-btn.active{color:#818cf8}
+.mnav-btn span:first-child{font-size:1.3rem}
+</style>
+<script>
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>new Response('Offline')))}});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+<\/script>
 </body>
 </html>
