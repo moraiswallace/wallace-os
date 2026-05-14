@@ -201,6 +201,7 @@ const MODULES=[
   {id:'saas',     label:'SaaS',          icon:'⚡',engine:'claude', color:'#f472b6', desc:'Validar lógica, features e estratégia do produto',suggestions:['Revisar este fluxo N8N','Melhor preço para o plano básico?','Features que aumentam retenção','Como reduzir churn?']},
   {id:'conteudo', label:'Conteúdo',      icon:'✦', engine:'gemini', color:'#34d399', desc:'Posts LinkedIn e Instagram prontos para publicar',suggestions:['Post sobre liderança offshore','Conteúdo sobre meu SaaS','História de superação','Dica técnica para engenheiros']},
   {id:'ingles',   label:'Inglês',        icon:'🇬🇧',engine:'gemini', color:'#fbbf24', desc:'Tutor interativo adaptado ao seu nível',         suggestions:['Practice: talk about my job','Correct my English','Teach business vocabulary','How to present in English?']},
+  {id:'pessoal',  label:'Pessoal',       icon:'◑', engine:'claude', color:'#c084fc', desc:'Rotinas, hábitos, bem-estar e vida pessoal',     suggestions:['Como estão meus hábitos?','Ajuda para montar rotina matinal','Estou me sentindo sobrecarregado','Reflexão sobre a semana']},
 ];
 
 const NAV=[
@@ -345,6 +346,7 @@ function getPrompt(id){
     saas:`Você é arquiteto de SaaS trabalhando com ${p.name||'Wallace'}. Produto: gestão financeira via WhatsApp, stack N8N+Gemini+Evolution API+Google Sheets, assinatura mensal, mercado brasileiro. Contexto: ${p.saasContext||'Em desenvolvimento.'}. Identifique falhas, sugira melhorias, aponte riscos. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
     conteudo:`Você é estrategista de conteúdo para ${p.name||'Wallace'}, líder técnico offshore (NOV) e empreendedor SaaS brasileiro. Para cada tema gere: 1) Post LinkedIn (storytelling, 150-200 palavras, CTA) 2) Legenda Instagram (engajante, hashtags) 3) Variação alternativa 4) Melhor horário. Responda em português.`,
     ingles:`You are the English tutor for ${p.name||'Wallace'}, Brazilian engineering professional. Level: ${p.englishLevel||'intermediate'}. Respond in English, correct mistakes, teach 1-2 relevant vocabulary words, offer 1 practice sentence. Be practical and encouraging.`,
+    pessoal:`Você é o parceiro de vida pessoal de ${p.name||'Wallace'}. Cuide de rotinas, hábitos, bem-estar físico e mental, organização pessoal e equilíbrio vida-trabalho. Seja empático e direto. Aponte padrões, sugira melhorias concretas e comemore avanços. Contexto geral: ${p.goals||'Busca equilíbrio entre carreira exigente e vida pessoal saudável.'}.${ctx} Responda em português.`,
   };
   return prompts[id]||'Seja um assistente útil. Responda em português.';
 }
@@ -465,7 +467,7 @@ function renderHome(){
     <div class="stats">
       <div class="stat"><div class="stat-val" style="color:#818cf8">${total}</div><div class="stat-lbl">Conversas</div></div>
       <div class="stat"><div class="stat-val" style="color:#34d399">${state.history.length}</div><div class="stat-lbl">Memórias</div></div>
-      <div class="stat"><div class="stat-val" style="color:#fb923c">6</div><div class="stat-lbl">Módulos</div></div>
+      <div class="stat"><div class="stat-val" style="color:#fb923c">7</div><div class="stat-lbl">Módulos</div></div>
       <div class="stat"><div class="stat-val" style="color:#f472b6">2</div><div class="stat-lbl">Engines</div></div>
     </div>
     <div class="section-lbl">Acesso rápido</div>
