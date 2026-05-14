@@ -313,10 +313,10 @@ function setSyncStatus(s){
 
 // ── API CALLERS ───────────────────────────────────────────────────────────
 async function callClaude(msgs,sys,key){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
+  const r=await fetch('/api/claude',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,system:sys,messages:msgs}),
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages:msgs,system:sys,key}),
   });
   const d=await r.json();
   if(d.error)throw new Error(d.error.message);
@@ -325,9 +325,10 @@ async function callClaude(msgs,sys,key){
 
 async function callGemini(msgs,sys,key){
   const contents=msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents,generationConfig:{maxOutputTokens:1500}}),
+  const r=await fetch('/api/gemini',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents,system_instruction:{parts:[{text:sys}]},key}),
   });
   const d=await r.json();
   if(d.error)throw new Error(d.error.message);
