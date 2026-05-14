@@ -3,1204 +3,874 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Wallace OS — Segundo Cérebro</title>
-<meta name="description" content="Segundo cérebro com IA híbrida — Wallace OS"/>
+<title>Wallace OS</title>
 <meta name="theme-color" content="#05050d"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Wallace OS"/>
-<link rel="manifest" href="data:application/json,{
-  %22name%22:%22Wallace OS%22,
-  %22short_name%22:%22Wallace OS%22,
-  %22description%22:%22Segundo c%C3%A9rebro com IA h%C3%ADbridaWallace%22,
-  %22start_url%22:%22.%2F%22,
-  %22display%22:%22standalone%22,
-  %22background_color%22:%22%2305050d%22,
-  %22theme_color%22:%22%2305050d%22,
-  %22orientation%22:%22portrait-primary%22,
-  %22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2305050d'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle' fill='%23818cf8'%3E%E2%97%88%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any maskable%22}]
-}"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Cabinet+Grotesk:wght@500;700;800;900&display=swap" rel="stylesheet"/>
 <style>
-:root {
-  --bg: #05050d;
-  --surface: #0a0a18;
-  --surface2: #0f0f20;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.1);
-  --text: #e2e2f0;
-  --muted: #3a3a5a;
-  --muted2: #555575;
-  --claude: #818cf8;
-  --gemini: #34d399;
-  --warn: #fb923c;
-  --danger: #f87171;
-  --font-display: 'Cabinet Grotesk', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--bg);font-family:var(--font-display);color:var(--text);min-height:100vh;overflow-x:hidden}
-#root{min-height:100vh}
+:root{
+  --bg:#05050d;--sur:#0a0a18;--sur2:#0f0f1f;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#e2e2f0;--muted:#3a3a5a;--muted2:#6060880;
+  --claude:#818cf8;--gemini:#34d399;--warn:#fb923c;--danger:#f87171;
+  --fd:'Cabinet Grotesk',sans-serif;--fm:'DM Mono',monospace;
+  --muted2:#606088;
+}
+body{background:var(--bg);font-family:'Cabinet Grotesk',sans-serif;color:var(--text);min-height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#1a1a30;border-radius:3px}
 
-/* SCROLLBAR */
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#1a1a30;border-radius:4px}
+/* SHELL */
+.shell{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
-/* ── LAYOUT ── */
-.os-shell{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;transition:width 0.3s ease;overflow:hidden}
-.sidebar.collapsed{width:60px}
-.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;padding-top:max(14px,env(safe-area-inset-top));border-bottom:1px solid var(--border);background:rgba(5,5,13,0.95);backdrop-filter:blur(12px);flex-shrink:0;gap:10px}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar-title{font-size:1rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.engine-pill{font-family:'DM Mono',monospace;font-size:0.52rem;padding:3px 8px;border-radius:20px;border:1px solid;white-space:nowrap;flex-shrink:0}
+.engine-pill.claude{color:var(--claude);border-color:rgba(129,140,248,0.3);background:rgba(129,140,248,0.08)}
+.engine-pill.gemini{color:var(--gemini);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sync-indicator{font-family:'DM Mono',monospace;font-size:0.55rem}
+.sync-ok{color:var(--gemini)}.sync-err{color:var(--warn)}.sync-ing{color:var(--muted);animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.user-name{font-family:'DM Mono',monospace;font-size:0.6rem;color:#505070}
 
-/* SIDEBAR */
-.sidebar-logo{padding:0 18px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;white-space:nowrap;overflow:hidden}
-.logo-text{font-size:1.1rem;font-weight:900;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff 0%,#818cf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.logo-sub{font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
-.sidebar.collapsed .logo-sub,.sidebar.collapsed .logo-text{display:none}
-.sidebar.collapsed .sidebar-logo{padding:0 0 20px;display:flex;justify-content:center}
-.sidebar.collapsed .logo-icon{display:block}
-.logo-icon{display:none;font-size:1.4rem}
+/* CONTENT */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;position:relative}
 
-.nav-section{padding:0 10px;margin-bottom:8px}
-.nav-label{font-family:var(--font-mono);font-size:0.52rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 8px;margin-bottom:6px;white-space:nowrap;overflow:hidden}
-.sidebar.collapsed .nav-label{opacity:0}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:all 0.18s;border:1px solid transparent;width:100%;background:none;color:var(--text);font-family:var(--font-display);font-size:0.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-align:left}
-.nav-item:hover{background:rgba(255,255,255,0.04);border-color:var(--border)}
-.nav-item.active{background:rgba(129,140,248,0.1);border-color:rgba(129,140,248,0.25);color:#a5b4fc}
-.nav-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center}
-.nav-text{flex:1;overflow:hidden;text-overflow:ellipsis}
-.sidebar.collapsed .nav-text,.sidebar.collapsed .nav-label{display:none}
-.nav-engine{font-family:var(--font-mono);font-size:0.48rem;padding:1px 5px;border-radius:4px;flex-shrink:0}
-.nav-engine.claude{color:var(--claude);background:rgba(129,140,248,0.12);border:1px solid rgba(129,140,248,0.2)}
-.nav-engine.gemini{color:var(--gemini);background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)}
-.sidebar.collapsed .nav-engine{display:none}
+/* BOTTOM NAV */
+.bottom-nav{display:flex;border-top:1px solid var(--border);background:rgba(5,5,13,0.97);padding:6px 0;padding-bottom:max(6px,env(safe-area-inset-bottom));flex-shrink:0}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:#3a3a5a;font-family:'DM Mono',monospace;font-size:0.45rem;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;padding:6px 2px;transition:color 0.18s;-webkit-tap-highlight-color:transparent}
+.nav-btn.active{color:var(--claude)}
+.nav-btn .ni{font-size:1.1rem;line-height:1}
 
-.sidebar-bottom{margin-top:auto;padding:0 10px;border-top:1px solid var(--border);padding-top:16px}
-
-/* ── TOPBAR ── */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(5,5,13,0.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:20;gap:16px}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-title{font-size:1.1rem;font-weight:800;letter-spacing:-0.02em}
-.topbar-engine{font-family:var(--font-mono);font-size:0.58rem;padding:3px 9px;border-radius:20px;border:1px solid}
-.topbar-engine.claude{color:var(--claude);border-color:rgba(129,140,248,0.3);background:rgba(129,140,248,0.08)}
-.topbar-engine.gemini{color:var(--gemini);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.topbar-btn{background:none;border:1px solid var(--border2);color:var(--muted2);padding:7px 13px;border-radius:8px;cursor:pointer;font-family:var(--font-mono);font-size:0.65rem;transition:all 0.2s;white-space:nowrap}
-.topbar-btn:hover{color:var(--text);border-color:#444}
-.topbar-btn.primary{background:var(--claude);color:#05050d;border-color:var(--claude);font-weight:500}
-.topbar-btn.primary:hover{filter:brightness(1.1)}
-
-/* ── PAGES ── */
-.page{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
-.page-full{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* PAGES */
+.page{padding:20px 18px;padding-bottom:20px;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* HOME */
-.home-header{margin-bottom:32px}
-.home-greeting{font-size:2.2rem;font-weight:900;letter-spacing:-0.04em;line-height:1.1;margin-bottom:6px}
-.home-greeting span{background:linear-gradient(135deg,#fff 0%,var(--claude) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.home-sub{font-family:var(--font-mono);font-size:0.72rem;color:var(--muted2)}
-
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px}
-.stat-value{font-size:1.6rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:4px}
-.stat-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
-
-.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
-.qa-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all 0.22s;text-align:left;color:var(--text);font-family:var(--font-display);position:relative;overflow:hidden}
-.qa-card:hover{border-color:var(--accent,var(--claude));transform:translateY(-2px);background:var(--surface2)}
-.qa-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent,var(--claude)) 12%,transparent),transparent 70%);opacity:0;transition:opacity 0.3s}
-.qa-card:hover::before{opacity:1}
-.qa-icon{font-size:1.5rem;margin-bottom:10px}
-.qa-title{font-size:0.9rem;font-weight:700;margin-bottom:4px}
-.qa-desc{font-family:var(--font-mono);font-size:0.65rem;color:var(--muted2);line-height:1.5}
-
-.recent-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
-.section-title{font-size:0.85rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.section-title-mono{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
-.history-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.15s}
-.history-item:last-child{border-bottom:none;padding-bottom:0}
-.history-item:hover .history-preview{color:var(--text)}
-.history-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
-.history-content{flex:1;min-width:0}
-.history-module{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
-.history-preview{font-size:0.82rem;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color 0.15s}
-.history-time{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted);flex-shrink:0}
-.empty-history{font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);text-align:center;padding:24px 0}
+.greeting{font-size:1.9rem;font-weight:900;letter-spacing:-0.03em;line-height:1.1;margin-bottom:4px}
+.greeting span{background:linear-gradient(135deg,#fff,var(--claude));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.home-sub{font-family:'DM Mono',monospace;font-size:0.65rem;color:#404060;margin-bottom:24px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.stat{background:var(--sur);border:1px solid var(--border);border-radius:12px;padding:14px}
+.stat-val{font-size:1.5rem;font-weight:900;letter-spacing:-0.02em}
+.stat-lbl{font-family:'DM Mono',monospace;font-size:0.55rem;color:#404060;text-transform:uppercase;letter-spacing:0.07em;margin-top:2px}
+.section-lbl{font-family:'DM Mono',monospace;font-size:0.58rem;color:#404060;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.mod-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.mod-card{background:var(--sur);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;text-align:left;width:100%;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;display:flex;align-items:center;gap:14px;transition:all 0.18s;-webkit-tap-highlight-color:transparent}
+.mod-card:active{background:var(--sur2);transform:scale(0.98)}
+.mod-icon{font-size:1.4rem;flex-shrink:0}
+.mod-info{flex:1;min-width:0}
+.mod-name{font-size:0.92rem;font-weight:700;margin-bottom:2px}
+.mod-desc{font-family:'DM Mono',monospace;font-size:0.6rem;color:#404060;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mod-tag{font-family:'DM Mono',monospace;font-size:0.48rem;padding:2px 6px;border-radius:4px;border:1px solid;flex-shrink:0}
+.mod-tag.claude{color:var(--claude);border-color:rgba(129,140,248,0.25)}
+.mod-tag.gemini{color:var(--gemini);border-color:rgba(52,211,153,0.25)}
+.recent-card{background:var(--sur);border:1px solid var(--border);border-radius:12px;padding:16px}
+.recent-title{font-size:0.85rem;font-weight:700;margin-bottom:12px}
+.history-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.history-row:last-child{border-bottom:none}
+.h-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.h-body{flex:1;min-width:0}
+.h-mod{font-family:'DM Mono',monospace;font-size:0.54rem;color:#404060;text-transform:uppercase;margin-bottom:2px}
+.h-text{font-size:0.8rem;color:#8080a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h-time{font-family:'DM Mono',monospace;font-size:0.54rem;color:#404060;flex-shrink:0}
+.empty-msg{font-family:'DM Mono',monospace;font-size:0.7rem;color:#404060;text-align:center;padding:20px 0}
 
 /* CHAT */
-.chat-wrap{display:flex;flex-direction:column;height:100%}
-.chat-context-bar{display:flex;align-items:center;gap:10px;padding:10px 24px;background:rgba(129,140,248,0.04);border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:0.65rem;color:var(--muted2);overflow-x:auto}
-.ctx-chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:3px 8px;white-space:nowrap;color:var(--muted2)}
-.ctx-chip.active{border-color:rgba(129,140,248,0.3);color:var(--claude)}
-.messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
-.empty-chat{margin:auto;text-align:center;padding:40px 20px}
-.empty-chat-icon{font-size:3rem;margin-bottom:14px}
-.empty-chat-title{font-size:1.2rem;font-weight:800;margin-bottom:6px}
-.empty-chat-sub{font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
-.suggestion-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.suggestion-pill{background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:7px 14px;font-size:0.78rem;cursor:pointer;transition:all 0.18s;color:var(--muted2)}
-.suggestion-pill:hover{border-color:var(--claude);color:var(--claude);background:rgba(129,140,248,0.06)}
-
-.msg{display:flex;flex-direction:column;gap:4px;max-width:86%}
+.chat-page{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.chat-ctx{display:flex;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.chat-ctx::-webkit-scrollbar{display:none}
+.ctx-chip{font-family:'DM Mono',monospace;font-size:0.55rem;padding:3px 9px;border-radius:6px;border:1px solid var(--border);color:#404060;white-space:nowrap;background:rgba(255,255,255,0.02)}
+.ctx-chip.on{border-color:rgba(129,140,248,0.3);color:var(--claude)}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.empty-chat{margin:auto;text-align:center;padding:30px 16px}
+.ec-icon{font-size:2.5rem;margin-bottom:12px}
+.ec-title{font-size:1.1rem;font-weight:800;margin-bottom:6px}
+.ec-sub{font-family:'DM Mono',monospace;font-size:0.65rem;color:#404060;margin-bottom:16px;line-height:1.6}
+.pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.pill{background:var(--sur2);border:1px solid var(--border2);border-radius:20px;padding:6px 12px;font-size:0.75rem;cursor:pointer;color:#8080a0;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+.pill:active{border-color:var(--claude);color:var(--claude)}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:88%}
 .msg.user{align-self:flex-end;align-items:flex-end}
-.msg.assistant{align-self:flex-start}
-.msg-meta{font-family:var(--font-mono);font-size:0.56rem;color:var(--muted);padding:0 4px;display:flex;align-items:center;gap:6px}
-.msg-body{border-radius:14px;padding:13px 17px;font-size:0.88rem;line-height:1.7;border:1px solid}
-.msg.user .msg-body{background:rgba(255,255,255,0.06);border-color:var(--border2);border-bottom-right-radius:4px}
-.msg.assistant .msg-body{background:var(--surface);border-color:var(--border);border-bottom-left-radius:4px;border-left:2px solid var(--module-color,var(--claude))}
-.msg-heading{font-weight:800;font-size:0.95rem;margin:10px 0 4px;color:#fff}
-.msg-bullet{padding:2px 0;color:#bbb}
-.msg-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.msg-action-btn{background:none;border:1px solid var(--border);color:var(--muted2);padding:4px 10px;border-radius:6px;font-family:var(--font-mono);font-size:0.58rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
-.msg-action-btn:hover{border-color:var(--border2);color:var(--text)}
-
-.dots{display:flex;gap:4px;align-items:center;padding:6px 0}
-.dots span{width:6px;height:6px;border-radius:50%;background:var(--module-color,var(--claude));animation:bounce 1.2s infinite}
-.dots span:nth-child(2){animation-delay:.18s}
-.dots span:nth-child(3){animation-delay:.36s}
-@keyframes bounce{0%,80%,100%{transform:scale(.55);opacity:.35}40%{transform:scale(1);opacity:1}}
-
-.input-area{padding:14px 24px 20px;border-top:1px solid var(--border);background:rgba(5,5,13,0.9);display:flex;flex-direction:column;gap:10px}
-.input-row{display:flex;gap:10px;align-items:flex-end}
-.chat-ta{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font-display);font-size:0.88rem;padding:13px 15px;resize:none;outline:none;transition:border-color 0.2s;line-height:1.5}
-.chat-ta:focus{border-color:var(--module-color,var(--claude))}
-.chat-ta::placeholder{color:var(--muted)}
-.send-btn{background:var(--module-color,var(--claude));color:#05050d;border:none;border-radius:12px;width:46px;height:46px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all 0.2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.send-btn:hover:not(:disabled){filter:brightness(1.1);transform:scale(1.04)}
+.msg.ai{align-self:flex-start}
+.msg-who{font-family:'DM Mono',monospace;font-size:0.54rem;color:#404060;padding:0 3px}
+.msg-body{border-radius:12px;padding:12px 15px;font-size:0.87rem;line-height:1.7;border:1px solid}
+.msg.user .msg-body{background:rgba(255,255,255,0.06);border-color:var(--border2);border-bottom-right-radius:3px}
+.msg.ai .msg-body{background:var(--sur);border-color:var(--border);border-bottom-left-radius:3px;border-left-width:2px}
+.msg-acts{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.act-btn{background:none;border:1px solid var(--border);color:#505070;padding:4px 9px;border-radius:6px;font-family:'DM Mono',monospace;font-size:0.55rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.act-btn:active{border-color:var(--border2);color:var(--text)}
+.dots-wrap{display:flex;gap:4px;align-items:center;padding:4px 0}
+.dots-wrap span{width:5px;height:5px;border-radius:50%;animation:bounce 1.2s infinite}
+.dots-wrap span:nth-child(2){animation-delay:.18s}
+.dots-wrap span:nth-child(3){animation-delay:.36s}
+@keyframes bounce{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+.file-out{background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:10px 14px;margin-top:8px;display:flex;align-items:center;gap:10px}
+.file-name{font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--gemini);flex:1}
+.dl-btn{background:var(--gemini);color:#05050d;border:none;border-radius:7px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:0.62rem;cursor:pointer;white-space:nowrap}
+.input-area{padding:10px 14px;padding-bottom:max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--border);background:rgba(5,5,13,0.95);flex-shrink:0}
+.input-tools{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
+.input-tools::-webkit-scrollbar{display:none}
+.tool-btn{background:none;border:1px solid var(--border);color:#505070;padding:5px 10px;border-radius:7px;font-family:'DM Mono',monospace;font-size:0.56rem;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.tool-btn.on{border-color:rgba(129,140,248,0.4);color:var(--claude);background:rgba(129,140,248,0.06)}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-ta{flex:1;background:var(--sur);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:0.88rem;padding:11px 13px;resize:none;outline:none;transition:border-color 0.2s;line-height:1.5;max-height:100px}
+.chat-ta:focus{border-color:var(--claude)}
+.chat-ta::placeholder{color:#303050}
+.send-btn{width:44px;height:44px;border-radius:10px;border:none;font-size:1.1rem;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:all 0.18s}
 .send-btn:disabled{opacity:.25;cursor:not-allowed}
-.input-tools{display:flex;gap:8px;align-items:center}
-.tool-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:7px;font-family:var(--font-mono);font-size:0.6rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
-.tool-btn:hover{border-color:var(--border2);color:var(--text)}
-.tool-btn.active{border-color:var(--claude);color:var(--claude);background:rgba(129,140,248,0.08)}
 
-/* PROFILE */
-.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
-.profile-card.full{grid-column:1/-1}
-.profile-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
-.profile-value{font-size:0.9rem;color:var(--text);font-weight:500}
-.profile-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-display);font-size:0.85rem;padding:10px 13px;outline:none;transition:border-color 0.2s;margin-top:6px}
-.profile-input:focus{border-color:var(--claude)}
-.profile-ta{resize:vertical;min-height:80px;font-family:var(--font-display);font-size:0.85rem}
-.save-btn{background:var(--claude);color:#05050d;border:none;border-radius:10px;padding:11px 24px;font-family:var(--font-display);font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:16px}
-.save-btn:hover{filter:brightness(1.1)}
+/* PROFILE & CONFIG */
+.form-card{background:var(--sur);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.form-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:#404060;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px}
+.form-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:0.85rem;padding:10px 12px;outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--claude)}
+.form-ta{resize:vertical;min-height:80px;line-height:1.5}
+.save-btn{background:var(--claude);color:#05050d;border:none;border-radius:10px;padding:12px 24px;font-family:'Cabinet Grotesk',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:8px;width:100%;-webkit-tap-highlight-color:transparent}
+.key-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.key-status{font-family:'DM Mono',monospace;font-size:0.55rem;padding:3px 8px;border-radius:20px;border:1px solid;white-space:nowrap}
+.key-ok{color:var(--gemini);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.06)}
+.key-no{color:#404060;border-color:var(--border)}
+.cost-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:0.68rem}
+.cost-row:last-child{border-bottom:none}
 
-/* API KEYS */
-.keys-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px}
-.key-row{display:flex;align-items:center;gap:12px;margin-top:10px}
-.key-input{flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:10px 13px;outline:none;transition:border-color 0.2s}
-.key-input:focus{border-color:var(--claude)}
-.key-status{font-family:var(--font-mono);font-size:0.6rem;padding:4px 10px;border-radius:20px;border:1px solid;white-space:nowrap}
-.key-status.ok{color:var(--gemini);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
-.key-status.missing{color:var(--muted);border-color:var(--border)}
+/* MEMORY */
+.mem-card{background:var(--sur);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+.mem-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mem-mod{font-family:'DM Mono',monospace;font-size:0.55rem;color:#404060;text-transform:uppercase}
+.mem-time{font-family:'DM Mono',monospace;font-size:0.55rem;color:#404060}
+.mem-text{font-size:0.8rem;color:#8080a0;line-height:1.5}
+.del-btn{background:none;border:none;color:#404060;cursor:pointer;font-size:0.8rem;padding:2px 6px}
 
-/* MEMORY / HISTORY */
-.memory-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:all 0.15s}
-.memory-card:hover{border-color:var(--border2)}
-.memory-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.memory-module{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
-.memory-time{font-family:var(--font-mono);font-size:0.58rem;color:var(--muted)}
-.memory-preview{font-size:0.82rem;color:var(--muted2);line-height:1.5}
-.memory-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.memory-tag{font-family:var(--font-mono);font-size:0.55rem;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted2)}
-.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;transition:color 0.15s;padding:2px 6px}
-.del-btn:hover{color:var(--danger)}
-
-/* FILE OUTPUT */
-.file-output{background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:12px 16px;margin-top:10px;display:flex;align-items:center;gap:12px}
-.file-icon{font-size:1.3rem}
-.file-info{flex:1}
-.file-name{font-family:var(--font-mono);font-size:0.75rem;color:var(--gemini);margin-bottom:2px}
-.file-size{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted)}
-.download-btn{background:var(--gemini);color:#05050d;border:none;border-radius:8px;padding:7px 14px;font-family:var(--font-mono);font-size:0.65rem;font-weight:500;cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.download-btn:hover{filter:brightness(1.1)}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:200;padding:24px}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:36px;max-width:500px;width:100%}
-.modal-title{font-size:1.4rem;font-weight:900;margin-bottom:6px}
-.modal-sub{font-family:var(--font-mono);font-size:0.68rem;color:var(--muted2);line-height:1.7;margin-bottom:24px}
-.modal-section{margin-bottom:18px}
-.modal-section-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;display:flex;align-items:center;gap:7px}
-.modal-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:12px 14px;outline:none;transition:border-color 0.2s}
+/* MODAL / ONBOARD */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+.modal{background:var(--sur);border:1px solid var(--border2);border-radius:18px;padding:30px 24px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.3rem;font-weight:900;margin-bottom:6px}
+.modal-sub{font-family:'DM Mono',monospace;font-size:0.65rem;color:#606080;line-height:1.7;margin-bottom:22px}
+.modal-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:#606080;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;margin-top:14px;display:flex;align-items:center;gap:7px}
+.modal-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:0.8rem;padding:11px 13px;outline:none;transition:border-color 0.2s;margin-bottom:4px}
 .modal-input:focus{border-color:var(--claude)}
-.modal-input.g:focus{border-color:var(--gemini)}
-.modal-btn{width:100%;background:var(--claude);color:#05050d;border:none;border-radius:10px;padding:13px;font-family:var(--font-display);font-size:0.95rem;font-weight:800;cursor:pointer;transition:all 0.2s;margin-top:6px}
-.modal-btn:hover{filter:brightness(1.1)}
-.modal-links{display:flex;gap:16px;justify-content:center;margin-top:12px;flex-wrap:wrap}
-.modal-link{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted)}
-.modal-link a{color:var(--muted2);text-decoration:none}
-.modal-link a:hover{color:var(--text)}
-.modal-skip{background:none;border:none;color:var(--muted);font-family:var(--font-mono);font-size:0.6rem;cursor:pointer;width:100%;text-align:center;margin-top:10px;padding:6px;text-transform:uppercase;letter-spacing:0.06em;transition:color 0.2s}
-.modal-skip:hover{color:var(--muted2)}
+.modal-btn{width:100%;background:var(--claude);color:#05050d;border:none;border-radius:10px;padding:13px;font-family:'Cabinet Grotesk',sans-serif;font-size:0.95rem;font-weight:800;cursor:pointer;margin-top:12px}
+.modal-links{display:flex;gap:16px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.modal-link{font-family:'DM Mono',monospace;font-size:0.58rem;color:#404060}
+.modal-link a{color:#606080;text-decoration:none}
+.modal-skip{background:none;border:none;color:#404060;font-family:'DM Mono',monospace;font-size:0.58rem;cursor:pointer;width:100%;text-align:center;margin-top:8px;padding:6px;text-transform:uppercase;letter-spacing:0.05em}
 
-/* ANIMATIONS */
-@keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.anim-in{animation:cardIn 0.4s ease both}
-.fade-in{animation:fadeIn 0.3s ease both}
+/* PAGE TITLE */
+.page-title{font-size:1.4rem;font-weight:900;margin-bottom:4px}
+.page-sub{font-family:'DM Mono',monospace;font-size:0.65rem;color:#404060;margin-bottom:20px}
 
-/* RESPONSIVE */
-@media(max-width:700px){
-  .sidebar{display:none}
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .quick-actions{grid-template-columns:1fr 1fr}
-  .profile-grid{grid-template-columns:1fr}
-  .page{padding:16px}
-}
-@media(max-width:480px){
-  .quick-actions{grid-template-columns:1fr}
-  .stats-row{grid-template-columns:1fr 1fr}
-}
+/* HELPERS */
+.msg-body strong{color:#fff}.msg-body em{color:#bbb}
+.mh{font-weight:800;font-size:0.93rem;margin:8px 0 3px;color:#fff;display:block}
+.mb{padding:2px 0;color:#aaa;display:block}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const {useState,useEffect,useRef,useCallback}=React;
+<div class="shell" id="app">
+  <div class="topbar" id="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title" id="topbar-title">Wallace OS</span>
+      <span class="engine-pill" id="engine-pill" style="display:none"></span>
+    </div>
+    <div class="topbar-right">
+      <span class="sync-indicator" id="sync-ind"></span>
+      <span class="user-name" id="user-name"></span>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
+</div>
 
-// ── CONSTANTS ────────────────────────────────────────────────────────────────
-const MODULES=[
-  {id:"home",    label:"Início",       icon:"⌂",  nav:true, home:true},
-  {id:"financas",label:"Finanças",     icon:"₿",  engine:"claude", color:"#818cf8", nav:true,
-   desc:"Análise de gastos, investimentos e patrimônio",
-   suggestions:["Analise meus gastos deste mês","Como está meu patrimônio?","Onde posso cortar gastos?","Monte uma projeção de 12 meses"]},
-  {id:"relatorio",label:"Relatório NOV",icon:"⚙", engine:"claude", color:"#60a5fa", nav:true,
-   desc:"Relatórios executivos para liderança global",
-   suggestions:["Gerar relatório de horas diretas","Analise os bloqueios operacionais","Monte plano de ação para a semana","Calcule eficiência por setor"]},
-  {id:"metas",   label:"Metas",        icon:"◎",  engine:"claude", color:"#fb923c", nav:true,
-   desc:"Coach de evolução pessoal e profissional",
-   suggestions:["Como está meu progresso geral?","Quais são minhas 3 prioridades da semana?","Estou travado em fitness, o que fazer?","Revise meu plano de negócio"]},
-  {id:"saas",    label:"SaaS",         icon:"⚡", engine:"claude", color:"#f472b6", nav:true,
-   desc:"Validar lógica, features e estratégia do seu produto",
-   suggestions:["Revise este fluxo do N8N","Qual o melhor preço para o plano básico?","Que features aumentam retenção?","Como reduzir churn?"]},
-  {id:"conteudo",label:"Conteúdo",     icon:"✦",  engine:"gemini", color:"#34d399", nav:true,
-   desc:"Posts LinkedIn e Instagram prontos para publicar",
-   suggestions:["Post sobre liderança em offshore","Conteúdo sobre meu SaaS de finanças","História de superação profissional","Dica técnica de soldagem para engenheiros"]},
-  {id:"ingles",  label:"Inglês",       icon:"🇬🇧", engine:"gemini", color:"#fbbf24", nav:true,
-   desc:"Tutor interativo adaptado ao seu nível",
-   suggestions:["Practice: talk about my job at NOV","Correct my paragraph","Teach me business vocabulary","How to present results in English?"]},
-  {id:"memoria", label:"Memória",      icon:"◈",  nav:true, special:"memory"},
-  {id:"perfil",  label:"Perfil",       icon:"◉",  nav:true, special:"profile"},
-  {id:"config",  label:"Configurações",icon:"⚙",  nav:true, special:"config"},
-];
-
-const SYSTEM_PROMPTS={
-  financas:(profile)=>`Você é o assistente financeiro pessoal de ${profile.name||'Wallace'}, especializado no mercado brasileiro.
-PERFIL DO USUÁRIO: ${profile.financialContext||'Profissional de engenharia buscando independência financeira. Tem interesse em CDB, Tesouro Selic, LCI/LCA.'}
-INSTRUÇÕES: 1) Use o perfil para personalizar análises 2) Categorize gastos automaticamente 3) Aponte excessos com números reais 4) Sugira otimizações concretas 5) Projete patrimônio em 6, 12 e 24 meses 6) Quando relevante, ofereça gerar planilha Excel com os dados.
-Seja direto, use números, não amenize. Se o usuário pedir um relatório ou planilha, responda com [GERAR_EXCEL: título] no final.
-Responda em português brasileiro.`,
-
-  relatorio:(profile)=>`Você é especialista em gestão de operações industriais para ${profile.name||'Wallace'}, Líder de Oficina na NOV Brazil.
-CONTEXTO: Oficina de Reparo de Riser, equipe multi-turno, setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição.
-INSTRUÇÕES: 1) Organize dados em formato executivo 2) Calcule KPIs: eficiência, produtividade, desvios 3) Identifique bloqueios (ofensores) 4) Monte plano de ação com responsáveis e prazos 5) Formate para diretoria global.
-Quando o usuário pedir para gerar relatório, responda com [GERAR_HTML: título] no final.
-Responda em português brasileiro.`,
-
-  metas:(profile)=>`Você é o coach pessoal de ${profile.name||'Wallace'}.
-PERFIL E METAS: ${profile.goals||'Fitness, inglês fluente, SaaS de finanças no ar, carreira gerencial na NOV, independência financeira.'}
-HISTÓRICO RELEVANTE: ${profile.metasHistory||'Sem histórico ainda.'}
-INSTRUÇÕES: 1) Avalie progresso honestamente, sem elogios vazios 2) Identifique o maior bloqueio atual 3) Proponha 3 ações impactantes para a semana 4) Ajuste o plano se necessário 5) Seja direto como mentor experiente.
-Responda em português brasileiro.`,
-
-  saas:(profile)=>`Você é arquiteto de produtos SaaS e especialista em agentes de IA trabalhando com ${profile.name||'Wallace'}.
-PRODUTO: Gestão financeira pessoal via WhatsApp. Stack: N8N, Gemini, Evolution API, Google Sheets. Modelo: assinatura mensal. Mercado: Brasil.
-CONTEXTO: ${profile.saasContext||'Produto em desenvolvimento, foco em simplicidade e custo baixo para o usuário.'}
-INSTRUÇÕES: 1) Identifique falhas em fluxos descritos 2) Sugira melhorias em prompts e lógica 3) Aponte riscos de escalabilidade 4) Proponha features para retenção 5) Baseie precificação no mercado brasileiro.
-Quando o usuário pedir para documentar algo, use [GERAR_HTML: título].
-Responda em português brasileiro.`,
-
-  conteudo:(profile)=>`Você é estrategista de conteúdo para ${profile.name||'Wallace'}, engenheiro e empreendedor brasileiro.
-POSICIONAMENTO: Líder técnico em offshore/óleo e gás (NOV Brazil) + fundador de SaaS de finanças pessoais. Busca autoridade como líder técnico-empreendedor.
-INSTRUÇÕES: Para cada tema, gere:
-1) POST LINKEDIN: storytelling profissional, 150-200 palavras, call-to-action, sem hashtags em excesso
-2) LEGENDA INSTAGRAM: pessoal e engajante, 80-120 palavras, 5-8 hashtags estratégicas
-3) VARIAÇÃO: mesmo tema, ângulo diferente
-4) MELHOR HORÁRIO: dia e hora para postar
-Responda em português brasileiro.`,
-
-  ingles:(profile)=>`You are the English tutor for ${profile.name||'Wallace'}, a Brazilian engineering professional at NOV Brazil.
-USER LEVEL: ${profile.englishLevel||'Intermediate — understands written English well, struggles with fluency and business vocabulary.'}
-For each interaction:
-1) Respond naturally in English
-2) Correct any mistakes with brief explanation
-3) Teach 1-2 vocabulary words relevant to engineering or business
-4) Offer 1 practice sentence
-5) Be encouraging, practical, not academic.
-Note: user also builds a SaaS product — tech vocabulary is very relevant.`,
-};
-
-// ── STORAGE ──────────────────────────────────────────────────────────────────
-const storage={
-  get:(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
-  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
-};
-
-// ── GOOGLE SHEETS SYNC ────────────────────────────────────────────────────────
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
 const SHEETS_ID='15_d38sh-a3wGKxGphOMEmyy9dnbml4ZuIG3VH1SXHQU';
 const SHEETS_KEY='AIzaSyCsyeIBzFPi9ZjIZKcWiDfMQyi7JcKXnEA';
 const SHEETS_BASE=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}`;
 
-const sheets={
-  // Ensure sheet tab exists
-  async ensureSheet(name){
-    try{
-      const r=await fetch(`${SHEETS_BASE}?key=${SHEETS_KEY}`);
-      const d=await r.json();
-      const exists=d.sheets?.some(s=>s.properties.title===name);
-      if(!exists){
-        await fetch(`${SHEETS_BASE}:batchUpdate?key=${SHEETS_KEY}`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({requests:[{addSheet:{properties:{title:name}}}]})
-        });
-      }
-    }catch(e){console.warn('ensureSheet:',e)}
-  },
+const MODULES=[
+  {id:'financas', label:'Finanças',      icon:'₿', engine:'claude', color:'#818cf8', desc:'Análise de gastos, investimentos e patrimônio', suggestions:['Analisar meus gastos','Projetar patrimônio 12 meses','Onde posso economizar?','Melhores investimentos agora']},
+  {id:'relatorio',label:'Relatório NOV', icon:'⚙', engine:'claude', color:'#60a5fa', desc:'Relatórios executivos para liderança global',   suggestions:['Gerar relatório de horas','Analisar bloqueios operacionais','Plano de ação semanal','Calcular eficiência por setor']},
+  {id:'metas',    label:'Metas',         icon:'◎', engine:'claude', color:'#fb923c', desc:'Coach de evolução pessoal e profissional',      suggestions:['Como está meu progresso?','Minhas 3 prioridades da semana','Estou travado, o que fazer?','Revisar plano de negócio']},
+  {id:'saas',     label:'SaaS',          icon:'⚡',engine:'claude', color:'#f472b6', desc:'Validar lógica, features e estratégia do produto',suggestions:['Revisar este fluxo N8N','Melhor preço para o plano básico?','Features que aumentam retenção','Como reduzir churn?']},
+  {id:'conteudo', label:'Conteúdo',      icon:'✦', engine:'gemini', color:'#34d399', desc:'Posts LinkedIn e Instagram prontos para publicar',suggestions:['Post sobre liderança offshore','Conteúdo sobre meu SaaS','História de superação','Dica técnica para engenheiros']},
+  {id:'ingles',   label:'Inglês',        icon:'🇬🇧',engine:'gemini', color:'#fbbf24', desc:'Tutor interativo adaptado ao seu nível',         suggestions:['Practice: talk about my job','Correct my English','Teach business vocabulary','How to present in English?']},
+];
 
-  // Write a full range to a sheet (overwrites)
-  async write(sheetName,rows){
-    try{
-      await this.ensureSheet(sheetName);
-      await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW&key=${SHEETS_KEY}`,{
-        method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({range:sheetName,majorDimension:'ROWS',values:rows})
-      });
-    }catch(e){console.warn('sheets.write:',e)}
-  },
+const NAV=[
+  {id:'home',    icon:'⌂', label:'Início'},
+  {id:'chat',    icon:'◈', label:'Módulos'},
+  {id:'memoria', icon:'◉', label:'Memória'},
+  {id:'perfil',  icon:'◎', label:'Perfil'},
+  {id:'config',  icon:'⚙', label:'Config'},
+];
 
-  // Append a single row
-  async append(sheetName,row){
-    try{
-      await this.ensureSheet(sheetName);
-      await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key=${SHEETS_KEY}`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({range:sheetName,majorDimension:'ROWS',values:[row]})
-      });
-    }catch(e){console.warn('sheets.append:',e)}
-  },
+// ── STORAGE ───────────────────────────────────────────────────────────────
+const S={
+  get:(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+};
 
-  // Read all rows from a sheet
-  async read(sheetName){
-    try{
-      const r=await fetch(`${SHEETS_BASE}/values/${encodeURIComponent(sheetName)}?key=${SHEETS_KEY}`);
-      const d=await r.json();
-      return d.values||[];
-    }catch(e){console.warn('sheets.read:',e);return[]}
-  },
+// ── STATE ─────────────────────────────────────────────────────────────────
+let state={
+  page:'home',
+  activeMod:null,
+  profile: S.get('wos_profile')||{name:'',role:'',goals:'',financialContext:'',saasContext:'',englishLevel:''},
+  keys:    S.get('wos_keys')||{claudeKey:'',geminiKey:''},
+  history: S.get('wos_history')||[],
+  chats:   {},
+  memoryOn:true,
+  syncStatus:'idle',
+  firstRun:!S.get('wos_initialized'),
+};
+// load per-module chats
+MODULES.forEach(m=>{state.chats[m.id]=S.get('chat_'+m.id)||[]});
 
-  // Sync profile to sheet
-  async syncProfile(profile){
-    const rows=[['chave','valor'],
-      ...Object.entries(profile).map(([k,v])=>[k,String(v||'')])
-    ];
-    await this.write('perfil',rows);
+// ── SHEETS SYNC ───────────────────────────────────────────────────────────
+const Sheets={
+  async req(path,method='GET',body){
+    const url=`${SHEETS_BASE}${path}${path.includes('?')?'&':'?'}key=${SHEETS_KEY}`;
+    const opts={method,headers:{'Content-Type':'application/json'}};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch(url,opts);
+    return r.json();
   },
-
-  // Load profile from sheet
+  async ensureTab(name){
+    const d=await this.req('');
+    if(!d.sheets?.some(s=>s.properties.title===name)){
+      await this.req(':batchUpdate','POST',{requests:[{addSheet:{properties:{title:name}}}]});
+    }
+  },
+  async write(tab,rows){
+    await this.ensureTab(tab);
+    await this.req(`/values/${encodeURIComponent(tab)}?valueInputOption=RAW`,'PUT',{range:tab,majorDimension:'ROWS',values:rows});
+  },
+  async append(tab,row){
+    await this.ensureTab(tab);
+    await this.req(`/values/${encodeURIComponent(tab)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,'POST',{range:tab,majorDimension:'ROWS',values:[row]});
+  },
+  async read(tab){
+    const d=await this.req(`/values/${encodeURIComponent(tab)}`);
+    return d.values||[];
+  },
+  async syncProfile(p){
+    await this.write('perfil',[['chave','valor'],...Object.entries(p).map(([k,v])=>[k,String(v||'')])]);
+  },
   async loadProfile(){
     const rows=await this.read('perfil');
     if(rows.length<2)return null;
-    const obj={};
-    rows.slice(1).forEach(([k,v])=>{if(k)obj[k]=v||''});
-    return obj;
+    const o={};rows.slice(1).forEach(([k,v])=>{if(k)o[k]=v||''});return o;
   },
-
-  // Append history entry
-  async appendHistory(entry){
-    // Header row on first use handled by ensureSheet + first append
-    await this.append('historico',[
-      String(entry.ts),
-      entry.module,
-      entry.summary.replace(/
-/g,' '),
-      (entry.response||'').replace(/
-/g,' '),
-      new Date(entry.ts).toLocaleString('pt-BR')
-    ]);
+  async appendHistory(e){
+    await this.append('historico',[String(e.ts),e.module,e.summary.replace(/\n/g,' '),(e.response||'').replace(/\n/g,' '),new Date(e.ts).toLocaleString('pt-BR')]);
   },
-
-  // Load all history
   async loadHistory(){
     const rows=await this.read('historico');
-    return rows.filter(r=>r[0]&&!isNaN(Number(r[0]))).map(r=>({
-      ts:Number(r[0]),
-      module:r[1]||'',
-      summary:r[2]||'',
-      response:r[3]||'',
-    }));
+    return rows.filter(r=>r[0]&&!isNaN(+r[0])).map(r=>({ts:+r[0],module:r[1]||'',summary:r[2]||'',response:r[3]||''}));
   },
-
-  // Delete history entry by ts
   async deleteHistory(ts){
     const rows=await this.read('historico');
-    const filtered=rows.filter(r=>String(r[0])!==String(ts));
-    await this.write('historico',filtered.length?filtered:[['ts','module','summary','response','data']]);
+    const f=rows.filter(r=>String(r[0])!==String(ts));
+    await this.write('historico',f.length?f:[['ts','module','summary','response','data']]);
   }
 };
 
-// ── API CALLERS ───────────────────────────────────────────────────────────────
-async function callClaude(messages,systemPrompt,apiKey){
+async function syncLoad(){
+  setSyncStatus('syncing');
+  try{
+    const [rp,rh]=await Promise.all([Sheets.loadProfile(),Sheets.loadHistory()]);
+    if(rp&&Object.keys(rp).length){
+      const m={...(S.get('wos_profile')||{}),...rp};
+      state.profile=m;S.set('wos_profile',m);
+    }
+    if(rh&&rh.length){
+      const local=S.get('wos_history')||[];
+      const ts=new Set(local.map(x=>x.ts));
+      const merged=[...local,...rh.filter(x=>!ts.has(x.ts))].slice(-200).sort((a,b)=>a.ts-b.ts);
+      state.history=merged;S.set('wos_history',merged);
+    }
+    setSyncStatus('synced');
+    renderPage();
+  }catch(e){setSyncStatus('error')}
+}
+
+function setSyncStatus(s){
+  state.syncStatus=s;
+  const el=document.getElementById('sync-ind');
+  if(!el)return;
+  if(s==='syncing'){el.className='sync-indicator sync-ing';el.textContent='◈ sync'}
+  else if(s==='synced'){el.className='sync-indicator sync-ok';el.textContent='✓ sync'}
+  else if(s==='error'){el.className='sync-indicator sync-err';el.textContent='⚠ offline'}
+  else{el.className='sync-indicator';el.textContent=''}
+}
+
+// ── API CALLERS ───────────────────────────────────────────────────────────
+async function callClaude(msgs,sys,key){
   const r=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system:systemPrompt,messages}),
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1500,system:sys,messages:msgs}),
   });
   const d=await r.json();
   if(d.error)throw new Error(d.error.message);
   return d.content?.[0]?.text||'Sem resposta.';
 }
 
-async function callGemini(messages,systemPrompt,apiKey){
-  const contents=messages.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system_instruction:{parts:[{text:systemPrompt}]},contents,generationConfig:{maxOutputTokens:1500}}),
+async function callGemini(msgs,sys,key){
+  const contents=msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents,generationConfig:{maxOutputTokens:1500}}),
   });
   const d=await r.json();
   if(d.error)throw new Error(d.error.message);
   return d.candidates?.[0]?.content?.parts?.[0]?.text||'Sem resposta.';
 }
 
-// ── FILE GENERATORS ───────────────────────────────────────────────────────────
-function generateExcel(title,content){
-  // Simple CSV that opens in Excel
-  const rows=[['Wallace OS — '+title],['Gerado em',new Date().toLocaleString('pt-BR')],[''],
-    ...content.split('\n').filter(l=>l.trim()).map(l=>[l.replace(/[*#►▸]/g,'').trim()])
-  ];
+// ── SYSTEM PROMPTS ────────────────────────────────────────────────────────
+function getPrompt(id){
+  const p=state.profile;
+  const recent=state.history.filter(h=>h.module===id).slice(-5).map(h=>`[${new Date(h.ts).toLocaleDateString('pt-BR')}] ${h.summary}`).join('\n');
+  const ctx=recent?`\nHISTÓRICO RECENTE:\n${recent}`:'';
+  const prompts={
+    financas:`Você é o analista financeiro pessoal de ${p.name||'Wallace'}. Contexto: ${p.financialContext||'Profissional buscando independência financeira no Brasil.'}. Categorize gastos, aponte excessos, sugira otimizações com números reais, projete patrimônio. Se pedirem planilha use [GERAR_CSV: título].${ctx} Responda em português.`,
+    relatorio:`Você é especialista em operações industriais para ${p.name||'Wallace'}, Líder de Oficina na NOV Brazil (Riser Repair). Setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição. Organize dados em formato executivo, calcule KPIs, identifique bloqueios, crie plano de ação. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
+    metas:`Você é o coach pessoal de ${p.name||'Wallace'}. Metas: ${p.goals||'Fitness, inglês fluente, SaaS no ar, carreira gerencial, independência financeira.'}. Avalie progresso honestamente, identifique o maior bloqueio, proponha 3 ações impactantes para a semana. Seja direto como mentor experiente.${ctx} Responda em português.`,
+    saas:`Você é arquiteto de SaaS trabalhando com ${p.name||'Wallace'}. Produto: gestão financeira via WhatsApp, stack N8N+Gemini+Evolution API+Google Sheets, assinatura mensal, mercado brasileiro. Contexto: ${p.saasContext||'Em desenvolvimento.'}. Identifique falhas, sugira melhorias, aponte riscos. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
+    conteudo:`Você é estrategista de conteúdo para ${p.name||'Wallace'}, líder técnico offshore (NOV) e empreendedor SaaS brasileiro. Para cada tema gere: 1) Post LinkedIn (storytelling, 150-200 palavras, CTA) 2) Legenda Instagram (engajante, hashtags) 3) Variação alternativa 4) Melhor horário. Responda em português.`,
+    ingles:`You are the English tutor for ${p.name||'Wallace'}, Brazilian engineering professional. Level: ${p.englishLevel||'intermediate'}. Respond in English, correct mistakes, teach 1-2 relevant vocabulary words, offer 1 practice sentence. Be practical and encouraging.`,
+  };
+  return prompts[id]||'Seja um assistente útil. Responda em português.';
+}
+
+// ── FILE GENERATORS ───────────────────────────────────────────────────────
+function makeCSV(title,content){
+  const rows=[['Wallace OS — '+title],['Gerado em',new Date().toLocaleString('pt-BR')],[''],...content.split('\n').filter(l=>l.trim()).map(l=>[l.replace(/[*#►▸◈]/g,'').trim()])];
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  return {blob,name:`${title.replace(/\s+/g,'_')}.csv`,type:'CSV/Excel'};
+  return{blob:new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}),name:title.replace(/\s+/g,'_')+'.csv'};
 }
-
-function generateHTML(title,content){
-  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>${title}</title>
-<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:40px auto;padding:0 24px;color:#1a1a2e;line-height:1.7}
-h1{color:#1e1e4a;border-bottom:3px solid #818cf8;padding-bottom:12px}
-h2{color:#2d2d6a;margin-top:28px}
-p{margin:8px 0}ul{padding-left:20px}li{margin:4px 0}
-.meta{color:#888;font-size:0.85rem;margin-bottom:24px}
-.tag{background:#f0f0ff;color:#4040aa;padding:2px 8px;border-radius:4px;font-size:0.8rem;margin:2px}
-</style></head><body>
-<h1>${title}</h1>
-<p class="meta">Gerado por Wallace OS em ${new Date().toLocaleString('pt-BR')}</p>
-${content.split('\n').map(l=>{
-  if(l.startsWith('# '))return`<h1>${l.slice(2)}</h1>`;
-  if(l.startsWith('## '))return`<h2>${l.slice(3)}</h2>`;
-  if(l.startsWith('### '))return`<h3>${l.slice(4)}</h3>`;
-  if(l.startsWith('- ')||l.startsWith('• '))return`<li>${l.slice(2)}</li>`;
-  if(l.match(/^\*\*/))return`<p><strong>${l.replace(/\*\*/g,'')}</strong></p>`;
-  if(l.trim()==='')return'<br/>';
-  return`<p>${l}</p>`;
-}).join('\n')}
-</body></html>`;
-  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  return{blob,name:`${title.replace(/\s+/g,'_')}.html`,type:'HTML'};
+function makeHTML(title,content){
+  const body=content.split('\n').map(l=>{
+    if(l.startsWith('## '))return`<h2>${l.slice(3)}</h2>`;
+    if(l.startsWith('# '))return`<h1>${l.slice(2)}</h1>`;
+    if(l.startsWith('- '))return`<li>${l.slice(2)}</li>`;
+    if(l.trim()==='')return'<br/>';
+    return`<p>${l}</p>`;
+  }).join('\n');
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>${title}</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:40px auto;padding:0 24px;line-height:1.7;color:#1a1a2e}h1,h2{color:#2d2d6a}p{margin:6px 0}li{margin:4px 0}</style></head><body><h1>${title}</h1><p style="color:#888;font-size:.85rem">Gerado por Wallace OS · ${new Date().toLocaleString('pt-BR')}</p>${body}</body></html>`;
+  return{blob:new Blob([html],{type:'text/html;charset=utf-8'}),name:title.replace(/\s+/g,'_')+'.html'};
 }
-
 function downloadFile({blob,name}){
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=name;a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-// ── FORMAT MESSAGE ─────────────────────────────────────────────────────────
-function formatMsg(text){
+// ── FORMAT ────────────────────────────────────────────────────────────────
+function fmt(text){
   return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.*?)\*/g,'<em>$1</em>')
-    .replace(/^### (.+)$/gm,'<div class="msg-heading" style="font-size:0.88rem">$1</div>')
-    .replace(/^## (.+)$/gm,'<div class="msg-heading">$1</div>')
-    .replace(/^# (.+)$/gm,'<div class="msg-heading" style="font-size:1.05rem">$1</div>')
-    .replace(/^[-•►▸]\s(.+)$/gm,'<div class="msg-bullet">▸ $1</div>')
-    .replace(/\n\n/g,'<br/><br/>')
-    .replace(/\n/g,'<br/>');
+    .replace(/^#{1,3}\s(.+)$/gm,'<span class="mh">$1</span>')
+    .replace(/^[-•]\s(.+)$/gm,'<span class="mb">▸ $1</span>')
+    .replace(/\n\n/g,'<br/><br/>').replace(/\n/g,'<br/>');
 }
-
-// ── TIME FORMAT ──────────────────────────────────────────────────────────────
 function timeAgo(ts){
-  const diff=(Date.now()-ts)/1000;
-  if(diff<60)return'agora';
-  if(diff<3600)return`${Math.floor(diff/60)}m`;
-  if(diff<86400)return`${Math.floor(diff/3600)}h`;
+  const d=(Date.now()-ts)/1000;
+  if(d<60)return'agora';if(d<3600)return Math.floor(d/60)+'m';
+  if(d<86400)return Math.floor(d/3600)+'h';
   return new Date(ts).toLocaleDateString('pt-BR');
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
+// ── PENDING FILES (for download buttons) ─────────────────────────────────
+const pendingFiles={};
 
-function FileOutput({file,onDownload}){
-  return(
-    <div className="file-output">
-      <span className="file-icon">📄</span>
-      <div className="file-info">
-        <div className="file-name">{file.name}</div>
-        <div className="file-size">{file.type} · clique para baixar</div>
-      </div>
-      <button className="download-btn" onClick={()=>onDownload(file)}>↓ Baixar</button>
-    </div>
-  );
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render(){
+  renderTopbar();
+  renderNav();
+  renderPage();
+  if(state.firstRun)showOnboard();
+  else syncLoad();
+  document.getElementById('user-name').textContent=state.profile.name||'';
 }
 
-// ── CHAT VIEW ────────────────────────────────────────────────────────────────
-function ChatView({module,profile,keys,allHistory,onSaveHistory}){
-  const [messages,setMessages]=useState(()=>{
-    const saved=storage.get(`chat_${module.id}`);
-    return saved||[];
-  });
-  const [input,setInput]=useState('');
-  const [loading,setLoading]=useState(false);
-  const [files,setFiles]=useState({});
-  const [useMemory,setUseMemory]=useState(true);
-  const bottomRef=useRef(null);
-  const taRef=useRef(null);
+function renderTopbar(){
+  // updated per page
+}
 
-  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'})},[messages,loading]);
-  useEffect(()=>{storage.set(`chat_${module.id}`,messages.slice(-30))},[messages]);
+function renderNav(){
+  const nav=document.getElementById('bottom-nav');
+  nav.innerHTML=NAV.map(n=>`
+    <button class="nav-btn ${state.page===n.id||(state.page==='chat'&&n.id==='chat')?'active':''}" onclick="goPage('${n.id}')">
+      <span class="ni">${n.icon}</span>${n.label}
+    </button>
+  `).join('');
+}
 
-  const hasKey=module.engine==='claude'?!!keys.claudeKey:module.engine==='gemini'?!!keys.geminiKey:false;
+function goPage(id){
+  state.page=id;
+  if(id==='chat'&&!state.activeMod)state.activeMod=MODULES[0].id;
+  renderNav();
+  renderPage();
+  updateTopbar();
+}
 
-  function buildSystemPrompt(){
-    const base=SYSTEM_PROMPTS[module.id]?.(profile)||'';
-    if(!useMemory)return base;
-    const recent=allHistory.filter(h=>h.module===module.id).slice(-5);
-    if(!recent.length)return base;
-    const ctx=recent.map(h=>`[${new Date(h.ts).toLocaleDateString('pt-BR')}] ${h.summary}`).join('\n');
-    return base+`\n\nHISTÓRICO RECENTE DO USUÁRIO NESTE MÓDULO:\n${ctx}`;
-  }
-
-  async function send(text){
-    const msg=(text||input).trim();
-    if(!msg||loading||!hasKey)return;
-    setInput('');
-    const newMsgs=[...messages,{role:'user',content:msg}];
-    setMessages(newMsgs);
-    setLoading(true);
-    try{
-      const systemPrompt=buildSystemPrompt();
-      let reply;
-      if(module.engine==='claude') reply=await callClaude(newMsgs,systemPrompt,keys.claudeKey);
-      else reply=await callGemini(newMsgs,systemPrompt,keys.geminiKey);
-
-      // detect file generation commands
-      let fileObj=null;
-      if(reply.includes('[GERAR_EXCEL:')){
-        const t=reply.match(/\[GERAR_EXCEL:\s*(.+?)\]/)?.[1]||'Relatório';
-        fileObj=generateExcel(t,reply.replace(/\[GERAR_EXCEL:[^\]]+\]/g,''));
-      } else if(reply.includes('[GERAR_HTML:')){
-        const t=reply.match(/\[GERAR_HTML:\s*(.+?)\]/)?.[1]||'Documento';
-        fileObj=generateHTML(t,reply.replace(/\[GERAR_HTML:[^\]]+\]/g,''));
-      }
-
-      const cleanReply=reply.replace(/\[(GERAR_EXCEL|GERAR_HTML):[^\]]+\]/g,'').trim();
-      const msgId=Date.now();
-      if(fileObj)setFiles(f=>({...f,[msgId]:fileObj}));
-      const finalMsgs=[...newMsgs,{role:'assistant',content:cleanReply,id:msgId}];
-      setMessages(finalMsgs);
-
-      // save to history
-      onSaveHistory({
-        module:module.id,
-        ts:Date.now(),
-        summary:msg.slice(0,120),
-        response:cleanReply.slice(0,200),
-      });
-    } catch(e){
-      setMessages([...newMsgs,{role:'assistant',content:`⚠ Erro: ${e.message}`}]);
+function updateTopbar(){
+  const title=document.getElementById('topbar-title');
+  const pill=document.getElementById('engine-pill');
+  if(state.page==='chat'&&state.activeMod){
+    const m=MODULES.find(x=>x.id===state.activeMod);
+    title.textContent=m?m.label:'Módulos';
+    if(m){
+      pill.style.display='';
+      pill.className='engine-pill '+m.engine;
+      pill.textContent=m.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash';
     }
-    setLoading(false);
+  } else {
+    const labels={home:'Wallace OS',memoria:'Memória',perfil:'Perfil',config:'Configurações',chat:'Módulos'};
+    title.textContent=labels[state.page]||'Wallace OS';
+    pill.style.display='none';
   }
-
-  function clearChat(){
-    if(confirm('Limpar conversa?')){setMessages([]);storage.set(`chat_${module.id}`,[])}
-  }
-
-  function copyMsg(content){
-    navigator.clipboard.writeText(content).then(()=>{}).catch(()=>{});
-  }
-
-  return(
-    <div className="chat-wrap" style={{'--module-color':module.color||'var(--claude)'}}>
-      <div className="chat-context-bar">
-        <span className="ctx-chip active">{module.icon} {module.label}</span>
-        {useMemory&&<span className="ctx-chip active">◈ Memória ativa</span>}
-        <span className="ctx-chip">{module.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}</span>
-        {messages.length>0&&<span className="ctx-chip">{messages.length} mensagens</span>}
-      </div>
-
-      <div className="messages">
-        {messages.length===0&&(
-          <div className="empty-chat fade-in">
-            <div className="empty-chat-icon">{module.icon}</div>
-            <div className="empty-chat-title">{module.label}</div>
-            <div className="empty-chat-sub">{module.desc}<br/>{!hasKey&&<span style={{color:'var(--warn)'}}>⚠ Configure a chave {module.engine==='claude'?'Claude':'Gemini'} nas configurações</span>}</div>
-            <div className="suggestion-pills">
-              {(module.suggestions||[]).map((s,i)=>(
-                <button key={i} className="suggestion-pill" onClick={()=>send(s)}>{s}</button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {messages.map((m,i)=>(
-          <div key={i} className={`msg ${m.role} anim-in`} style={{animationDelay:`${Math.min(i*0.03,0.3)}s`}}>
-            <div className="msg-meta">
-              {m.role==='user'?'Você':(module.engine==='claude'?'Claude Sonnet':'Gemini Flash')}
-            </div>
-            <div className="msg-body" dangerouslySetInnerHTML={{__html:formatMsg(m.content)}}/>
-            {m.role==='assistant'&&(
-              <div className="msg-actions">
-                <button className="msg-action-btn" onClick={()=>copyMsg(m.content)}>⧉ Copiar</button>
-                {files[m.id]&&<button className="msg-action-btn" style={{color:'var(--gemini)',borderColor:'rgba(52,211,153,0.3)'}} onClick={()=>downloadFile(files[m.id])}>↓ Baixar arquivo</button>}
-                <button className="msg-action-btn" onClick={()=>send('Aprofunde esta resposta e seja mais detalhado')}>+ Detalhar</button>
-              </div>
-            )}
-            {m.role==='assistant'&&files[m.id]&&<FileOutput file={files[m.id]} onDownload={downloadFile}/>}
-          </div>
-        ))}
-
-        {loading&&(
-          <div className="msg assistant">
-            <div className="msg-meta">{module.engine==='claude'?'Claude Sonnet':'Gemini Flash'}</div>
-            <div className="msg-body"><div className="dots"><span/><span/><span/></div></div>
-          </div>
-        )}
-        <div ref={bottomRef}/>
-      </div>
-
-      <div className="input-area">
-        <div className="input-tools">
-          <button className={`tool-btn ${useMemory?'active':''}`} onClick={()=>setUseMemory(v=>!v)}>
-            ◈ {useMemory?'Memória on':'Memória off'}
-          </button>
-          <button className="tool-btn" onClick={()=>send('Com base no que discutimos, gere um documento completo para baixar')}>
-            ↓ Gerar arquivo
-          </button>
-          {messages.length>0&&<button className="tool-btn" onClick={clearChat}>✕ Limpar</button>}
-        </div>
-        <div className="input-row">
-          <textarea
-            ref={taRef}
-            className="chat-ta"
-            placeholder={hasKey?`Mensagem para ${module.label}... (Enter para enviar)`:`Configure a chave ${module.engine==='claude'?'Claude':'Gemini'} nas configurações`}
-            value={input}
-            onChange={e=>setInput(e.target.value)}
-            onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
-            rows={2}
-            disabled={!hasKey||loading}
-          />
-          <button className="send-btn" onClick={()=>send()} disabled={!input.trim()||loading||!hasKey}>
-            {loading?'…':'→'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
-// ── HOME VIEW ────────────────────────────────────────────────────────────────
-function HomeView({profile,history,setActivePage}){
-  const [time,setTime]=useState(new Date());
-  useEffect(()=>{const t=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(t)},[]);
-
-  const hour=time.getHours();
-  const greeting=hour<12?'Bom dia':'Bom dia'||hour<18?'Boa tarde':'Boa noite';
-  const greetWord=hour<12?'Bom dia':hour<18?'Boa tarde':'Boa noite';
-
-  const totalChats=MODULES.filter(m=>m.engine).reduce((acc,m)=>{
-    const msgs=storage.get(`chat_${m.id}`)||[];
-    return acc+msgs.length;
-  },0);
-
-  const quickModules=MODULES.filter(m=>m.engine).slice(0,6);
-  const recentHistory=history.slice(-6).reverse();
-
-  return(
-    <div className="page anim-in">
-      <div className="home-header">
-        <div className="home-greeting"><span>{greetWord}, {profile.name||'Wallace'}</span></div>
-        <div className="home-sub">{time.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · {time.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-      </div>
-
-      <div className="stats-row">
-        {[
-          {label:'Conversas',value:Math.floor(totalChats/2)||0,color:'#818cf8'},
-          {label:'Memórias',value:history.length,color:'#34d399'},
-          {label:'Módulos',value:6,color:'#fb923c'},
-          {label:'Engines',value:2,color:'#f472b6'},
-        ].map((s,i)=>(
-          <div key={i} className="stat-card anim-in" style={{animationDelay:`${i*0.07}s`}}>
-            <div className="stat-value" style={{color:s.color}}>{s.value}</div>
-            <div className="stat-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{fontSize:'0.7rem',fontFamily:'var(--font-mono)',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:'10px'}}>Acesso rápido</div>
-      <div className="quick-actions" style={{marginBottom:28}}>
-        {quickModules.map((m,i)=>(
-          <button key={m.id} className="qa-card anim-in" style={{'--accent':m.color,animationDelay:`${i*0.06}s`}} onClick={()=>setActivePage(m.id)}>
-            <div className="qa-icon">{m.icon}</div>
-            <div className="qa-title">{m.label}</div>
-            <div className="qa-desc">{m.desc}</div>
-          </button>
-        ))}
-      </div>
-
-      <div className="recent-section">
-        <div className="section-title">
-          <span>Histórico recente</span>
-          <span className="section-title-mono">{history.length} entradas</span>
-        </div>
-        {recentHistory.length===0&&<div className="empty-history">Nenhuma conversa ainda. Escolha um módulo acima.</div>}
-        {recentHistory.map((h,i)=>{
-          const mod=MODULES.find(m=>m.id===h.module);
-          return(
-            <div key={i} className="history-item" onClick={()=>setActivePage(h.module)}>
-              <div className="history-dot" style={{background:mod?.color||'var(--muted)'}}/>
-              <div className="history-content">
-                <div className="history-module">{mod?.icon} {mod?.label}</div>
-                <div className="history-preview">{h.summary}</div>
-              </div>
-              <div className="history-time">{timeAgo(h.ts)}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+function renderPage(){
+  const c=document.getElementById('content');
+  updateTopbar();
+  if(state.page==='home')c.innerHTML=renderHome();
+  else if(state.page==='chat')c.innerHTML=renderChat();
+  else if(state.page==='memoria')c.innerHTML=renderMemoria();
+  else if(state.page==='perfil')c.innerHTML=renderPerfil();
+  else if(state.page==='config')c.innerHTML=renderConfig();
+  attachListeners();
 }
 
-// ── MEMORY VIEW ──────────────────────────────────────────────────────────────
-function MemoryView({history,onDelete}){
-  const grouped={};
-  history.forEach(h=>{
-    if(!grouped[h.module])grouped[h.module]=[];
-    grouped[h.module].push(h);
+// ── HOME ──────────────────────────────────────────────────────────────────
+function renderHome(){
+  const now=new Date();
+  const h=now.getHours();
+  const greet=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const total=MODULES.reduce((a,m)=>{const c=S.get('chat_'+m.id)||[];return a+Math.floor(c.length/2)},0);
+  const recent=state.history.slice(-5).reverse();
+  return`
+  <div class="page">
+    <div class="greeting"><span>${greet}, ${state.profile.name||'Wallace'}</span></div>
+    <div class="home-sub">${now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" style="color:#818cf8">${total}</div><div class="stat-lbl">Conversas</div></div>
+      <div class="stat"><div class="stat-val" style="color:#34d399">${state.history.length}</div><div class="stat-lbl">Memórias</div></div>
+      <div class="stat"><div class="stat-val" style="color:#fb923c">6</div><div class="stat-lbl">Módulos</div></div>
+      <div class="stat"><div class="stat-val" style="color:#f472b6">2</div><div class="stat-lbl">Engines</div></div>
+    </div>
+    <div class="section-lbl">Acesso rápido</div>
+    <div class="mod-list">
+      ${MODULES.map(m=>`
+        <button class="mod-card" onclick="openMod('${m.id}')">
+          <span class="mod-icon">${m.icon}</span>
+          <div class="mod-info">
+            <div class="mod-name">${m.label}</div>
+            <div class="mod-desc">${m.desc}</div>
+          </div>
+          <span class="mod-tag ${m.engine}">${m.engine==='claude'?'S4':'G1.5'}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="recent-card">
+      <div class="recent-title">Histórico recente</div>
+      ${recent.length===0?'<div class="empty-msg">Nenhuma conversa ainda.</div>':
+        recent.map(h=>{
+          const mod=MODULES.find(x=>x.id===h.module);
+          return`<div class="history-row" onclick="openMod('${h.module}')">
+            <div class="h-dot" style="background:${mod?.color||'#555'}"></div>
+            <div class="h-body">
+              <div class="h-mod">${mod?.icon||''} ${mod?.label||h.module}</div>
+              <div class="h-text">${h.summary}</div>
+            </div>
+            <div class="h-time">${timeAgo(h.ts)}</div>
+          </div>`;
+        }).join('')
+      }
+    </div>
+  </div>`;
+}
+
+function openMod(id){
+  state.activeMod=id;
+  state.page='chat';
+  renderNav();
+  renderPage();
+  updateTopbar();
+}
+
+// ── CHAT ──────────────────────────────────────────────────────────────────
+function renderChat(){
+  const mod=MODULES.find(m=>m.id===state.activeMod)||MODULES[0];
+  const msgs=state.chats[mod.id]||[];
+  const hasKey=mod.engine==='claude'?!!state.keys.claudeKey:!!state.keys.geminiKey;
+
+  return`<div class="chat-page" style="height:100%;display:flex;flex-direction:column">
+    <!-- module tabs -->
+    <div style="display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0">
+      ${MODULES.map(m=>`<button onclick="switchMod('${m.id}')" style="background:${state.activeMod===m.id?'rgba(129,140,248,0.12)':'none'};border:1px solid ${state.activeMod===m.id?'rgba(129,140,248,0.3)':'var(--border)'};color:${state.activeMod===m.id?'#a5b4fc':'#505070'};padding:5px 12px;border-radius:20px;font-family:'DM Mono',monospace;font-size:0.58rem;cursor:pointer;white-space:nowrap;flex-shrink:0">${m.icon} ${m.label}</button>`).join('')}
+    </div>
+    <!-- ctx bar -->
+    <div class="chat-ctx">
+      <span class="ctx-chip on">${mod.icon} ${mod.label}</span>
+      <span class="ctx-chip ${state.memoryOn?'on':''}">◈ Memória ${state.memoryOn?'on':'off'}</span>
+      <span class="ctx-chip">${mod.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}</span>
+    </div>
+    <!-- messages -->
+    <div class="msgs" id="msgs-area">
+      ${msgs.length===0?`
+        <div class="empty-chat">
+          <div class="ec-icon">${mod.icon}</div>
+          <div class="ec-title">${mod.label}</div>
+          <div class="ec-sub">${mod.desc}${!hasKey?'<br/><span style="color:var(--warn)">⚠ Configure a chave '+mod.engine+' nas Configurações</span>':''}</div>
+          <div class="pills">${(mod.suggestions||[]).map(s=>`<button class="pill" onclick="sendSuggestion('${s.replace(/'/g,"\\'")}')"> ${s}</button>`).join('')}</div>
+        </div>`:
+        msgs.map((m,i)=>renderMsg(m,i,mod)).join('')
+      }
+      <div id="msgs-bottom"></div>
+    </div>
+    <!-- input -->
+    <div class="input-area">
+      <div class="input-tools">
+        <button class="tool-btn ${state.memoryOn?'on':''}" onclick="toggleMemory()">◈ Memória</button>
+        <button class="tool-btn" onclick="genFile()">↓ Gerar arquivo</button>
+        ${msgs.length>0?`<button class="tool-btn" onclick="clearChat()">✕ Limpar</button>`:''}
+      </div>
+      <div class="input-row">
+        <textarea class="chat-ta" id="chat-input" rows="2" placeholder="${hasKey?'Mensagem... (Enter para enviar)':'Configure a chave '+mod.engine+' nas Configurações'}" ${!hasKey?'disabled':''}></textarea>
+        <button class="send-btn" id="send-btn" style="background:${mod.color}" onclick="sendMsg()" ${!hasKey?'disabled':''}>→</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMsg(m,i,mod){
+  const isAI=m.role==='assistant';
+  const fileKey='file_'+i;
+  const hasFile=pendingFiles[mod.id+'_'+i];
+  return`<div class="msg ${isAI?'ai':'user'}">
+    <div class="msg-who">${m.role==='user'?'Você':mod.engine==='claude'?'Claude Sonnet':'Gemini Flash'}</div>
+    <div class="msg-body" style="${isAI?`border-left-color:${mod.color}`:''}">${fmt(m.content)}</div>
+    ${isAI?`<div class="msg-acts">
+      <button class="act-btn" onclick="copyText(${i})">⧉ Copiar</button>
+      <button class="act-btn" onclick="detailMsg(${i})">+ Detalhar</button>
+      ${hasFile?`<button class="act-btn" style="color:var(--gemini)" onclick="dlFile('${mod.id}_${i}')">↓ Baixar</button>`:''}
+    </div>
+    ${hasFile?`<div class="file-out"><span class="file-name">${pendingFiles[mod.id+'_'+i].name}</span><button class="dl-btn" onclick="dlFile('${mod.id}_${i}')">Baixar</button></div>`:''}
+    `:''}
+  </div>`;
+}
+
+function switchMod(id){
+  state.activeMod=id;
+  renderPage();updateTopbar();
+}
+
+function toggleMemory(){state.memoryOn=!state.memoryOn;renderPage();}
+function clearChat(){
+  if(!confirm('Limpar conversa?'))return;
+  state.chats[state.activeMod]=[];
+  S.set('chat_'+state.activeMod,[]);
+  renderPage();
+}
+
+function sendSuggestion(text){
+  const ta=document.getElementById('chat-input');
+  if(ta){ta.value=text;sendMsg();}
+  else{
+    // inject and send
+    const mod=MODULES.find(m=>m.id===state.activeMod);
+    if(!mod)return;
+    doSend(text,mod);
+  }
+}
+
+function sendMsg(){
+  const ta=document.getElementById('chat-input');
+  if(!ta)return;
+  const text=ta.value.trim();
+  if(!text)return;
+  ta.value='';
+  const mod=MODULES.find(m=>m.id===state.activeMod);
+  if(!mod)return;
+  doSend(text,mod);
+}
+
+async function doSend(text,mod){
+  const msgs=state.chats[mod.id]||[];
+  const newMsgs=[...msgs,{role:'user',content:text}];
+  state.chats[mod.id]=newMsgs;
+  S.set('chat_'+mod.id,newMsgs.slice(-30));
+  // show user msg + loading
+  renderPage();
+  scrollBottom();
+  // add loading indicator
+  const msgsArea=document.getElementById('msgs-area');
+  if(msgsArea){
+    const loadDiv=document.createElement('div');
+    loadDiv.className='msg ai';loadDiv.id='loading-msg';
+    loadDiv.innerHTML=`<div class="msg-who">${mod.engine==='claude'?'Claude Sonnet':'Gemini Flash'}</div><div class="msg-body" style="border-left-color:${mod.color}"><div class="dots-wrap"><span style="background:${mod.color}"></span><span style="background:${mod.color}"></span><span style="background:${mod.color}"></span></div></div>`;
+    msgsArea.insertBefore(loadDiv,document.getElementById('msgs-bottom'));
+    scrollBottom();
+  }
+  try{
+    const key=mod.engine==='claude'?state.keys.claudeKey:state.keys.geminiKey;
+    const sys=getPrompt(mod.id);
+    let reply;
+    if(mod.engine==='claude')reply=await callClaude(newMsgs,sys,key);
+    else reply=await callGemini(newMsgs,sys,key);
+
+    // detect file gen commands
+    let fileObj=null;
+    if(reply.includes('[GERAR_CSV:')){
+      const t=reply.match(/\[GERAR_CSV:\s*(.+?)\]/)?.[1]||'Relatório';
+      fileObj=makeCSV(t,reply.replace(/\[GERAR_CSV:[^\]]+\]/g,''));
+    } else if(reply.includes('[GERAR_HTML:')){
+      const t=reply.match(/\[GERAR_HTML:\s*(.+?)\]/)?.[1]||'Documento';
+      fileObj=makeHTML(t,reply.replace(/\[GERAR_HTML:[^\]]+\]/g,''));
+    }
+    const clean=reply.replace(/\[(GERAR_CSV|GERAR_HTML):[^\]]+\]/g,'').trim();
+    const finalMsgs=[...newMsgs,{role:'assistant',content:clean}];
+    state.chats[mod.id]=finalMsgs;
+    S.set('chat_'+mod.id,finalMsgs.slice(-30));
+    const idx=finalMsgs.length-1;
+    if(fileObj)pendingFiles[mod.id+'_'+idx]=fileObj;
+
+    // save history
+    const entry={ts:Date.now(),module:mod.id,summary:text.slice(0,120),response:clean.slice(0,200)};
+    state.history=[...state.history,entry].slice(-200);
+    S.set('wos_history',state.history);
+    Sheets.appendHistory(entry).catch(()=>{});
+
+  }catch(e){
+    const errMsgs=[...newMsgs,{role:'assistant',content:`⚠ Erro: ${e.message}`}];
+    state.chats[mod.id]=errMsgs;
+    S.set('chat_'+mod.id,errMsgs.slice(-30));
+  }
+  renderPage();scrollBottom();
+}
+
+function scrollBottom(){
+  setTimeout(()=>{
+    const b=document.getElementById('msgs-bottom');
+    if(b)b.scrollIntoView({behavior:'smooth'});
+  },100);
+}
+
+function copyText(i){
+  const mod=MODULES.find(m=>m.id===state.activeMod);
+  const msgs=state.chats[mod.id]||[];
+  const aiMsgs=msgs.filter(m=>m.role==='assistant');
+  const msg=aiMsgs[Math.floor(i/2)]||msgs[i];
+  if(msg)navigator.clipboard.writeText(msg.content).catch(()=>{});
+}
+
+function detailMsg(i){
+  const ta=document.getElementById('chat-input');
+  if(ta)ta.value='Aprofunde e seja mais detalhado na resposta anterior.';
+}
+
+function dlFile(key){
+  if(pendingFiles[key])downloadFile(pendingFiles[key]);
+}
+
+function genFile(){
+  const ta=document.getElementById('chat-input');
+  if(ta)ta.value='Com base no que discutimos, gere um documento completo para baixar.';
+}
+
+// ── MEMORIA ───────────────────────────────────────────────────────────────
+function renderMemoria(){
+  const byMod={};
+  state.history.forEach(h=>{
+    if(!byMod[h.module])byMod[h.module]=[];
+    byMod[h.module].push(h);
   });
-
-  return(
-    <div className="page anim-in">
-      <div style={{marginBottom:24}}>
-        <div style={{fontSize:'1.4rem',fontWeight:900,marginBottom:4}}>◈ Memória</div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--muted2)'}}>
-          {history.length} entradas · salvas localmente no seu navegador
-        </div>
-      </div>
-      {history.length===0&&<div className="empty-history" style={{textAlign:'left'}}>Nenhuma memória ainda. Comece a usar os módulos.</div>}
-      {Object.entries(grouped).map(([modId,items])=>{
+  return`<div class="page">
+    <div class="page-title">◈ Memória</div>
+    <div class="page-sub">${state.history.length} entradas · salvas localmente e no Sheets</div>
+    ${state.history.length===0?'<div class="empty-msg">Nenhuma memória ainda.</div>':
+      Object.entries(byMod).map(([modId,items])=>{
         const mod=MODULES.find(m=>m.id===modId);
-        return(
-          <div key={modId} style={{marginBottom:24}}>
-            <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
-              <span>{mod?.icon}</span> {mod?.label} ({items.length})
-            </div>
-            {items.slice().reverse().map((h,i)=>(
-              <div key={i} className="memory-card">
-                <div className="memory-header">
-                  <div className="memory-time">{new Date(h.ts).toLocaleString('pt-BR')}</div>
-                  <button className="del-btn" onClick={()=>onDelete(h.ts)}>✕</button>
-                </div>
-                <div className="memory-preview"><strong>Você:</strong> {h.summary}</div>
-                {h.response&&<div className="memory-preview" style={{marginTop:4,opacity:0.7}}><strong>IA:</strong> {h.response}</div>}
+        return`<div style="margin-bottom:20px">
+          <div class="section-lbl" style="margin-bottom:8px">${mod?.icon||''} ${mod?.label||modId} (${items.length})</div>
+          ${items.slice().reverse().map(h=>`
+            <div class="mem-card">
+              <div class="mem-head">
+                <span class="mem-mod">${new Date(h.ts).toLocaleString('pt-BR')}</span>
+                <button class="del-btn" onclick="delHistory(${h.ts})">✕</button>
               </div>
-            ))}
-          </div>
-        );
-      })}
-    </div>
-  );
+              <div class="mem-text"><strong>Você:</strong> ${h.summary}</div>
+              ${h.response?`<div class="mem-text" style="opacity:.7;margin-top:4px"><strong>IA:</strong> ${h.response}</div>`:''}
+            </div>
+          `).join('')}
+        </div>`;
+      }).join('')
+    }
+  </div>`;
 }
 
-// ── PROFILE VIEW ─────────────────────────────────────────────────────────────
-function ProfileView({profile,onSave}){
-  const [form,setForm]=useState(profile);
-  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
-
-  return(
-    <div className="page anim-in">
-      <div style={{marginBottom:24}}>
-        <div style={{fontSize:'1.4rem',fontWeight:900,marginBottom:4}}>◉ Perfil</div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--muted2)'}}>
-          Quanto mais completo, mais personalizado o segundo cérebro
-        </div>
-      </div>
-      <div className="profile-grid">
-        {[
-          {k:'name',label:'Nome',ph:'Wallace Morais'},
-          {k:'role',label:'Cargo / Função',ph:'Workshop Leader — NOV Brazil'},
-          {k:'englishLevel',label:'Nível de inglês',ph:'Intermediário — lê bem, fala com dificuldade'},
-        ].map(({k,label,ph})=>(
-          <div key={k} className="profile-card">
-            <div className="profile-label">{label}</div>
-            <input className="profile-input" value={form[k]||''} onChange={e=>set(k,e.target.value)} placeholder={ph}/>
-          </div>
-        ))}
-        {[
-          {k:'goals',label:'Metas de vida (seja detalhado)',ph:'Fitness 3x semana, inglês fluente em 12 meses, SaaS com 50 clientes, promovido a gerente em 2026...'},
-          {k:'financialContext',label:'Contexto financeiro',ph:'Renda mensal, gastos fixos, investimentos atuais, patrimônio, metas...'},
-          {k:'saasContext',label:'Contexto do SaaS',ph:'Estágio atual, número de clientes, principais desafios, próximos passos...'},
-        ].map(({k,label,ph})=>(
-          <div key={k} className="profile-card full">
-            <div className="profile-label">{label}</div>
-            <textarea className="profile-input profile-ta" value={form[k]||''} onChange={e=>set(k,e.target.value)} placeholder={ph}/>
-          </div>
-        ))}
-      </div>
-      <button className="save-btn" onClick={()=>onSave(form)}>Salvar perfil</button>
-    </div>
-  );
+function delHistory(ts){
+  state.history=state.history.filter(h=>h.ts!==ts);
+  S.set('wos_history',state.history);
+  Sheets.deleteHistory(ts).catch(()=>{});
+  renderPage();
 }
 
-// ── CONFIG VIEW ───────────────────────────────────────────────────────────────
-function ConfigView({keys,onSave}){
-  const [form,setForm]=useState(keys);
-  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
-
-  return(
-    <div className="page anim-in">
-      <div style={{marginBottom:24}}>
-        <div style={{fontSize:'1.4rem',fontWeight:900,marginBottom:4}}>⚙ Configurações</div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--muted2)'}}>
-          Chaves salvas localmente · nunca enviadas a terceiros
-        </div>
-      </div>
-
-      <div className="keys-card">
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--claude)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
-          <span style={{width:8,height:8,borderRadius:'50%',background:'var(--claude)',display:'inline-block'}}/>
-          Claude Sonnet 4 — Finanças, NOV, Metas, SaaS
-        </div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.68rem',color:'var(--muted2)',marginBottom:10,lineHeight:1.6}}>
-          Obter em: console.anthropic.com → API Keys
-        </div>
-        <div className="key-row">
-          <input className="key-input" type="password" placeholder="sk-ant-..." value={form.claudeKey||''} onChange={e=>set('claudeKey',e.target.value)}/>
-          <span className={`key-status ${form.claudeKey?.startsWith('sk-')?'ok':'missing'}`}>
-            {form.claudeKey?.startsWith('sk-')?'✓ OK':'Não configurado'}
-          </span>
-        </div>
-      </div>
-
-      <div className="keys-card">
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.62rem',color:'var(--gemini)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8,display:'flex',alignItems:'center',gap:8}}>
-          <span style={{width:8,height:8,borderRadius:'50%',background:'var(--gemini)',display:'inline-block'}}/>
-          Gemini 1.5 Flash — Conteúdo, Inglês
-        </div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.68rem',color:'var(--muted2)',marginBottom:10,lineHeight:1.6}}>
-          Obter em: aistudio.google.com/app/apikey (gratuito)
-        </div>
-        <div className="key-row">
-          <input className="key-input" type="password" placeholder="AIza..." value={form.geminiKey||''} onChange={e=>set('geminiKey',e.target.value)}/>
-          <span className={`key-status ${form.geminiKey?.length>10?'ok':'missing'}`}>
-            {form.geminiKey?.length>10?'✓ OK':'Não configurado'}
-          </span>
-        </div>
-      </div>
-
-      <button className="save-btn" onClick={()=>onSave(form)}>Salvar chaves</button>
-
-      <div style={{marginTop:28,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:20}}>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:'0.6rem',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12}}>Custo estimado por mês</div>
-        {[
-          {label:'100 msgs nos módulos críticos (Claude)',cost:'~R$ 4,50'},
-          {label:'100 msgs nos módulos ágeis (Gemini)',cost:'~R$ 0,50'},
-          {label:'Total estimado (uso moderado)',cost:'~R$ 5/mês'},
-          {label:'GitHub + Vercel (hospedagem)',cost:'Gratuito'},
-          {label:'Google Sheets (memória sync)',cost:'Gratuito'},
-        ].map((r,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)',fontFamily:'var(--font-mono)',fontSize:'0.72rem'}}>
-            <span style={{color:'var(--muted2)'}}>{r.label}</span>
-            <span style={{color:'var(--text)',fontWeight:500}}>{r.cost}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── FIRST RUN MODAL ───────────────────────────────────────────────────────────
-function FirstRunModal({onComplete}){
-  const [step,setStep]=useState(0);
-  const [name,setName]=useState('');
-  const [claudeKey,setClaudeKey]=useState('');
-  const [geminiKey,setGeminiKey]=useState('');
-
-  function finish(){
-    onComplete({name,claudeKey,geminiKey});
-  }
-
-  return(
-    <div className="modal-overlay">
-      <div className="modal fade-in">
-        {step===0&&(
-          <>
-            <div className="modal-title">Bem-vindo ao Wallace OS</div>
-            <div className="modal-sub">Seu segundo cérebro com IA híbrida.<br/>Lembra de tudo. Gera arquivos. Evolui com você.<br/><br/>Vamos configurar em 2 passos rápidos.</div>
-            <div className="modal-section">
-              <div className="modal-section-label">Como devo te chamar?</div>
-              <input className="modal-input" placeholder="Seu nome..." value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&name&&setStep(1)}/>
-            </div>
-            <button className="modal-btn" onClick={()=>setStep(1)} disabled={!name.trim()}>Continuar →</button>
-          </>
-        )}
-        {step===1&&(
-          <>
-            <div className="modal-title">🔑 Configurar APIs</div>
-            <div className="modal-sub">Configure uma ou ambas. Pode adicionar depois em Configurações.</div>
-            <div className="modal-section">
-              <div className="modal-section-label">
-                <span style={{width:7,height:7,borderRadius:'50%',background:'var(--claude)',display:'inline-block'}}/>
-                Claude Sonnet 4 (módulos críticos)
-              </div>
-              <input className="modal-input" type="password" placeholder="sk-ant-..." value={claudeKey} onChange={e=>setClaudeKey(e.target.value)}/>
-            </div>
-            <div className="modal-section">
-              <div className="modal-section-label">
-                <span style={{width:7,height:7,borderRadius:'50%',background:'var(--gemini)',display:'inline-block'}}/>
-                Gemini 1.5 Flash (conteúdo e inglês)
-              </div>
-              <input className="modal-input g" type="password" placeholder="AIza..." value={geminiKey} onChange={e=>setGeminiKey(e.target.value)}/>
-            </div>
-            <button className="modal-btn" onClick={finish} disabled={!claudeKey&&!geminiKey}>Entrar no OS</button>
-            <div className="modal-links">
-              <div className="modal-link">Claude: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
-              <div className="modal-link">Gemini: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></div>
-            </div>
-            <button className="modal-skip" onClick={finish}>Pular — configurar depois</button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN APP
-// ═══════════════════════════════════════════════════════════════════════════
-function App(){
-  const [activePage,setActivePage]=useState('home');
-  const [firstRun,setFirstRun]=useState(()=>!storage.get('wos_initialized'));
-  const [sidebarOpen,setSidebarOpen]=useState(true);
-  const [profile,setProfile]=useState(()=>storage.get('wos_profile')||{name:'',role:'',goals:'',financialContext:'',saasContext:'',englishLevel:''});
-  const [keys,setKeys]=useState(()=>storage.get('wos_keys')||{claudeKey:'',geminiKey:''});
-  const [history,setHistory]=useState(()=>storage.get('wos_history')||[]);
-  const [syncStatus,setSyncStatus]=useState('idle'); // idle | syncing | synced | error
-
-  // Load from Sheets on startup (merges with local)
-  useEffect(()=>{
-    setSyncStatus('syncing');
-    Promise.all([sheets.loadProfile(),sheets.loadHistory()])
-      .then(([remoteProfile,remoteHistory])=>{
-        if(remoteProfile&&Object.keys(remoteProfile).length>0){
-          const merged={...(storage.get('wos_profile')||{}), ...remoteProfile};
-          setProfile(merged);storage.set('wos_profile',merged);
+// ── PERFIL ────────────────────────────────────────────────────────────────
+function renderPerfil(){
+  const p=state.profile;
+  return`<div class="page">
+    <div class="page-title">◉ Perfil</div>
+    <div class="page-sub">Quanto mais completo, mais personalizado o segundo cérebro</div>
+    ${[
+      {k:'name',label:'Nome',ph:'Wallace Morais',ta:false},
+      {k:'role',label:'Cargo / Função',ph:'Workshop Leader — NOV Brazil',ta:false},
+      {k:'englishLevel',label:'Nível de inglês',ph:'Intermediário — lê bem, fala com dificuldade',ta:false},
+      {k:'goals',label:'Metas de vida',ph:'Fitness 3x semana, inglês fluente, SaaS com 50 clientes...',ta:true},
+      {k:'financialContext',label:'Contexto financeiro',ph:'Renda, gastos fixos, investimentos, patrimônio, metas...',ta:true},
+      {k:'saasContext',label:'Contexto do SaaS',ph:'Estágio atual, clientes, desafios, próximos passos...',ta:true},
+    ].map(f=>`
+      <div class="form-card">
+        <div class="form-label">${f.label}</div>
+        ${f.ta
+          ?`<textarea class="form-input form-ta" id="pf_${f.k}" placeholder="${f.ph}">${p[f.k]||''}</textarea>`
+          :`<input class="form-input" id="pf_${f.k}" placeholder="${f.ph}" value="${(p[f.k]||'').replace(/"/g,'&quot;')}"/>`
         }
-        if(remoteHistory&&remoteHistory.length>0){
-          // Merge: keep all unique entries by ts
-          const local=storage.get('wos_history')||[];
-          const tsSet=new Set(local.map(x=>x.ts));
-          const merged=[...local,...remoteHistory.filter(x=>!tsSet.has(x.ts))].slice(-200);
-          merged.sort((a,b)=>a.ts-b.ts);
-          setHistory(merged);storage.set('wos_history',merged);
-        }
-        setSyncStatus('synced');
-      })
-      .catch(()=>setSyncStatus('error'));
-  },[]);
-
-  function handleFirstRun({name,claudeKey,geminiKey}){
-    const p={...profile,name};
-    const k={claudeKey,geminiKey};
-    setProfile(p);setKeys(k);
-    storage.set('wos_profile',p);
-    storage.set('wos_keys',k);
-    storage.set('wos_initialized',true);
-    setFirstRun(false);
-    // Sync profile to Sheets on first run
-    sheets.syncProfile(p).catch(()=>{});
-  }
-
-  function saveProfile(p){
-    setProfile(p);storage.set('wos_profile',p);
-    sheets.syncProfile(p)
-      .then(()=>alert('Perfil salvo e sincronizado com Google Sheets! ✓'))
-      .catch(()=>alert('Perfil salvo localmente. Sincronização pendente.'));
-  }
-
-  function saveKeys(k){
-    setKeys(k);storage.set('wos_keys',k);
-    alert('Chaves salvas!');
-  }
-
-  function saveHistory(entry){
-    const h=[...history,entry].slice(-200);
-    setHistory(h);storage.set('wos_history',h);
-    // Async sync to Sheets — fire and forget
-    sheets.appendHistory(entry).catch(()=>{});
-  }
-
-  function deleteHistory(ts){
-    const h=history.filter(x=>x.ts!==ts);
-    setHistory(h);storage.set('wos_history',h);
-    sheets.deleteHistory(ts).catch(()=>{});
-  }
-
-  const activeModule=MODULES.find(m=>m.id===activePage)||MODULES[0];
-  const isChatPage=!!activeModule.engine;
-
-  function renderContent(){
-    if(activePage==='home')return <HomeView profile={profile} history={history} setActivePage={setActivePage}/>;
-    if(activePage==='memoria')return <MemoryView history={history} onDelete={deleteHistory}/>;
-    if(activePage==='perfil')return <ProfileView profile={profile} onSave={saveProfile}/>;
-    if(activePage==='config')return <ConfigView keys={keys} onSave={saveKeys}/>;
-    if(isChatPage)return <ChatView key={activePage} module={activeModule} profile={profile} keys={keys} allHistory={history} onSaveHistory={saveHistory}/>;
-    return null;
-  }
-
-  return(
-    <>
-      {firstRun&&<FirstRunModal onComplete={handleFirstRun}/>}
-      <div className="os-shell">
-        {/* SIDEBAR */}
-        <div className={`sidebar ${sidebarOpen?'':'collapsed'}`}>
-          <div className="sidebar-logo">
-            <span className="logo-icon">◈</span>
-            <div className="logo-text">Wallace OS</div>
-            <div className="logo-sub">Segundo Cérebro</div>
-          </div>
-
-          <div className="nav-section">
-            <div className="nav-label">Sistema</div>
-            {MODULES.filter(m=>m.home||m.special==='memory').map(m=>(
-              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
-                <span className="nav-icon">{m.icon}</span>
-                <span className="nav-text">{m.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="nav-section">
-            <div className="nav-label">Módulos Claude</div>
-            {MODULES.filter(m=>m.engine==='claude').map(m=>(
-              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
-                <span className="nav-icon">{m.icon}</span>
-                <span className="nav-text">{m.label}</span>
-                <span className="nav-engine claude">S4</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="nav-section">
-            <div className="nav-label">Módulos Gemini</div>
-            {MODULES.filter(m=>m.engine==='gemini').map(m=>(
-              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
-                <span className="nav-icon">{m.icon}</span>
-                <span className="nav-text">{m.label}</span>
-                <span className="nav-engine gemini">G2</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="sidebar-bottom">
-            {MODULES.filter(m=>m.special==='profile'||m.special==='config').map(m=>(
-              <button key={m.id} className={`nav-item ${activePage===m.id?'active':''}`} onClick={()=>setActivePage(m.id)}>
-                <span className="nav-icon">{m.icon}</span>
-                <span className="nav-text">{m.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* MAIN */}
-        <div className="main">
-          <div className="topbar">
-            <div className="topbar-left">
-              <button className="topbar-btn" onClick={()=>setSidebarOpen(v=>!v)} style={{padding:'7px 10px'}}>☰</button>
-              <span className="topbar-title">{activeModule.label}</span>
-              {activeModule.engine&&(
-                <span className={`topbar-engine ${activeModule.engine}`}>
-                  {activeModule.engine==='claude'?'Claude Sonnet 4':'Gemini 1.5 Flash'}
-                </span>
-              )}
-            </div>
-            <div className="topbar-right">
-              {syncStatus==='syncing'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--muted)',display:'flex',alignItems:'center',gap:5}}><span style={{animation:'pulse 1s infinite',display:'inline-block',width:6,height:6,borderRadius:'50%',background:'var(--muted)'}}/>sync</span>}
-              {syncStatus==='synced'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--gemini)'}}>✓ sync</span>}
-              {syncStatus==='error'&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.58rem',color:'var(--warn)'}}>⚠ offline</span>}
-              {!keys.claudeKey&&<button className="topbar-btn" onClick={()=>setActivePage('config')} style={{color:'var(--warn)',borderColor:'rgba(251,146,60,0.3)'}}>⚠ Configurar API</button>}
-              {profile.name&&<span style={{fontFamily:'var(--font-mono)',fontSize:'0.65rem',color:'var(--muted2)'}}>{profile.name}</span>}
-            </div>
-          </div>
-
-          {isChatPage
-            ?<div style={{flex:1,overflow:'hidden',display:'flex',flexDirection:'column'}}>{renderContent()}</div>
-            :<div style={{flex:1,overflowY:'auto'}}>{renderContent()}</div>
-          }
-        </div>
       </div>
-    </>
-  );
+    `).join('')}
+    <button class="save-btn" onclick="savePerfil()">Salvar perfil</button>
+  </div>`;
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+function savePerfil(){
+  const p={};
+  ['name','role','englishLevel','goals','financialContext','saasContext'].forEach(k=>{
+    const el=document.getElementById('pf_'+k);
+    if(el)p[k]=el.value;
+  });
+  state.profile=p;S.set('wos_profile',p);
+  document.getElementById('user-name').textContent=p.name||'';
+  Sheets.syncProfile(p)
+    .then(()=>alert('Perfil salvo e sincronizado! ✓'))
+    .catch(()=>alert('Perfil salvo localmente.'));
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────────────
+function renderConfig(){
+  const k=state.keys;
+  return`<div class="page">
+    <div class="page-title">⚙ Configurações</div>
+    <div class="page-sub">Chaves salvas localmente · nunca enviadas a terceiros</div>
+
+    <div class="form-card">
+      <div class="form-label" style="display:flex;align-items:center;gap:7px">
+        <span style="width:7px;height:7px;border-radius:50%;background:#818cf8;display:inline-block"></span>
+        Claude Sonnet 4 — Finanças, NOV, Metas, SaaS
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#404060;margin-bottom:8px">console.anthropic.com → API Keys</div>
+      <div class="key-row">
+        <input class="form-input" id="cfg_claude" type="password" placeholder="sk-ant-..." value="${k.claudeKey||''}"/>
+        <span class="key-status ${k.claudeKey?.startsWith('sk-')?'key-ok':'key-no'}">${k.claudeKey?.startsWith('sk-')?'✓ OK':'—'}</span>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-label" style="display:flex;align-items:center;gap:7px">
+        <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block"></span>
+        Gemini 1.5 Flash — Conteúdo, Inglês
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#404060;margin-bottom:8px">aistudio.google.com/app/apikey (gratuito)</div>
+      <div class="key-row">
+        <input class="form-input" id="cfg_gemini" type="password" placeholder="AIza..." value="${k.geminiKey||''}"/>
+        <span class="key-status ${k.geminiKey?.length>10?'key-ok':'key-no'}">${k.geminiKey?.length>10?'✓ OK':'—'}</span>
+      </div>
+    </div>
+
+    <button class="save-btn" onclick="saveKeys()">Salvar chaves</button>
+
+    <div class="form-card" style="margin-top:16px">
+      <div class="form-label">Custo estimado por mês</div>
+      ${[
+        ['100 msgs módulos críticos (Claude)','~R$ 4,50'],
+        ['100 msgs módulos ágeis (Gemini)','~R$ 0,50'],
+        ['Total estimado uso moderado','~R$ 5/mês'],
+        ['GitHub + Vercel','Gratuito'],
+        ['Google Sheets (sync)','Gratuito'],
+      ].map(([l,v])=>`<div class="cost-row"><span style="color:#606080">${l}</span><span>${v}</span></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function saveKeys(){
+  const ck=document.getElementById('cfg_claude')?.value||'';
+  const gk=document.getElementById('cfg_gemini')?.value||'';
+  state.keys={claudeKey:ck,geminiKey:gk};
+  S.set('wos_keys',state.keys);
+  alert('Chaves salvas! ✓');
+  renderPage();
+}
+
+// ── ONBOARDING ────────────────────────────────────────────────────────────
+function showOnboard(){
+  const overlay=document.createElement('div');
+  overlay.className='overlay';overlay.id='onboard';
+  overlay.innerHTML=`<div class="modal">
+    <div class="modal-title">Bem-vindo ao Wallace OS</div>
+    <div class="modal-sub">Seu segundo cérebro com IA híbrida.<br/>Lembra de tudo. Gera arquivos. Evolui com você.</div>
+    <div class="modal-label">Como devo te chamar?</div>
+    <input class="modal-input" id="ob_name" placeholder="Seu nome..." />
+    <div class="modal-label"><span style="width:7px;height:7px;border-radius:50%;background:#818cf8;display:inline-block"></span> Claude Sonnet 4</div>
+    <input class="modal-input" id="ob_claude" type="password" placeholder="sk-ant-..." />
+    <div class="modal-label"><span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block"></span> Gemini 1.5 Flash</div>
+    <input class="modal-input" id="ob_gemini" type="password" placeholder="AIza..." />
+    <button class="modal-btn" onclick="finishOnboard()">Entrar no OS</button>
+    <div class="modal-links">
+      <div class="modal-link">Claude: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+      <div class="modal-link">Gemini: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></div>
+    </div>
+    <button class="modal-skip" onclick="finishOnboard()">Pular — configurar depois</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function finishOnboard(){
+  const name=document.getElementById('ob_name')?.value||'';
+  const ck=document.getElementById('ob_claude')?.value||'';
+  const gk=document.getElementById('ob_gemini')?.value||'';
+  if(name){state.profile={...state.profile,name};S.set('wos_profile',state.profile);}
+  if(ck||gk){state.keys={claudeKey:ck,geminiKey:gk};S.set('wos_keys',state.keys);}
+  S.set('wos_initialized',true);
+  state.firstRun=false;
+  document.getElementById('onboard')?.remove();
+  document.getElementById('user-name').textContent=name||'';
+  if(name)Sheets.syncProfile(state.profile).catch(()=>{});
+  syncLoad();
+}
+
+// ── ATTACH LISTENERS ──────────────────────────────────────────────────────
+function attachListeners(){
+  const ta=document.getElementById('chat-input');
+  if(ta){
+    ta.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+    });
+  }
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+try{render();}catch(e){
+  document.getElementById('app').innerHTML=`<div style="color:#e2e2f0;font-family:monospace;padding:30px;background:#05050d;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px"><div style="font-size:1.5rem">⚠ Wallace OS</div><div style="color:#f87171;font-size:0.8rem">${e.message}</div><button onclick="location.reload()" style="margin-top:16px;background:#818cf8;color:#05050d;border:none;border-radius:8px;padding:10px 24px;font-size:0.9rem;cursor:pointer">Recarregar</button></div>`;
+}
 </script>
-
-<style>
-/* PWA / Mobile polish */
-@media(max-width:700px){
-  .sidebar{display:none!important}
-  .topbar{padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
-  .page{padding:16px;padding-bottom:max(80px,env(safe-area-inset-bottom))}
-  .messages{padding:16px;padding-bottom:80px}
-  .input-area{padding:10px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom))}
-  .stats-row{grid-template-columns:1fr 1fr}
-  .quick-actions{grid-template-columns:1fr 1fr}
-  .profile-grid{grid-template-columns:1fr}
-  .mobile-nav{display:flex!important}
-}
-.mobile-nav{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;
-  background:rgba(5,5,13,0.97);
-  border-top:1px solid rgba(255,255,255,0.07);
-  padding:8px 0;
-  padding-bottom:max(8px,env(safe-area-inset-bottom));
-  z-index:50;
-  justify-content:space-around;
-  align-items:center;
-  backdrop-filter:blur(20px);
-}
-.mnav-btn{
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  background:none;border:none;color:#3a3a5a;
-  font-family:'DM Mono',monospace;font-size:0.48rem;
-  text-transform:uppercase;letter-spacing:0.05em;
-  cursor:pointer;padding:6px 8px;border-radius:8px;
-  transition:all 0.18s;min-width:48px;
-}
-.mnav-btn.active{color:#818cf8}
-.mnav-btn span:first-child{font-size:1.3rem}
-</style>
-<script>
-if('serviceWorker' in navigator){
-  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>self.clients.claim());self.addEventListener('fetch',e=>{if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>new Response('Offline')))}});`;
-  const blob=new Blob([sw],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
-}
-<\/script>
 </body>
 </html>
