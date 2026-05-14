@@ -190,6 +190,30 @@ body{background:var(--bg);font-family:'Cabinet Grotesk',sans-serif;color:var(--t
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
+// ── TEMPLATE RELATÓRIO NOV ────────────────────────────────────────────────
+const RELATORIO_CSS=`:root{--bg:#0A0A0C;--bg2:#0F0F12;--bg3:#141418;--bg4:#1A1A1F;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);--border3:rgba(255,255,255,.04);--champagne:#C8A96A;--champ2:#D8BC88;--champ-dim:rgba(200,169,106,.10);--silver:#9AAABB;--silver2:#B8C8D4;--pos:#4A9A70;--pos-dim:rgba(74,154,112,.12);--warn:#B87A38;--warn-dim:rgba(184,122,56,.12);--neg:#A04040;--neg-dim:rgba(160,64,64,.12);--t-primary:#E8EAF0;--t-secondary:#8A9AB0;--t-muted:#4A5668;--t-label:#6A7A8C;--font:'Segoe UI','Helvetica Neue',Arial,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:var(--font);background:var(--bg);color:var(--t-primary);font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.hdr{background:linear-gradient(180deg,#0A0A0D 0%,#0F0F14 100%);border-bottom:1px solid var(--border2);position:relative}.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--champagne),var(--silver),transparent);opacity:.5}.hdr-accent{height:2px;background:linear-gradient(90deg,transparent 0%,var(--champagne) 30%,var(--silver2) 60%,transparent 100%)}.hdr-top{display:flex;align-items:center;gap:20px;padding:18px 36px;flex-wrap:wrap}.logo-box{height:44px;flex-shrink:0;border-radius:3px;background:linear-gradient(135deg,rgba(200,169,106,.18),rgba(154,170,187,.08));border:1px solid rgba(200,169,106,.3);display:flex;align-items:center;justify-content:center;padding:0 18px;font-size:18px;font-weight:800;letter-spacing:3px;color:var(--champagne)}.hdr-divider{width:1px;height:44px;background:var(--border2);flex-shrink:0}.hdr-info{flex:1}.hdr-info h1{font-size:15px;font-weight:600;color:var(--t-primary);letter-spacing:.8px;text-transform:uppercase}.hdr-info .sub{font-size:11px;color:var(--t-secondary);margin-top:5px;line-height:1.7;display:flex;gap:14px;flex-wrap:wrap}.hdr-info .sub span::before{content:'·';margin-right:6px;color:var(--t-muted)}.hdr-info .sub span:first-child::before{display:none}.pill{display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(200,169,106,.3);border-radius:2px;padding:1px 7px;font-size:10px;color:var(--champagne);font-weight:600;background:var(--champ-dim);letter-spacing:.3px}.pill.blue{border-color:rgba(106,142,192,.3);color:#8AAEDC;background:rgba(106,142,192,.08)}.pill.green{border-color:rgba(74,154,112,.3);color:#6EC090;background:rgba(74,154,112,.08)}.pill.red{border-color:rgba(160,64,64,.3);color:#D07070;background:rgba(160,64,64,.08)}.hdr-right{text-align:right;font-size:10px;color:var(--t-muted);line-height:2}.hdr-right .name{color:var(--t-secondary);font-weight:600;font-size:11px}.hdr-meta{background:rgba(255,255,255,.018);border-top:1px solid var(--border3);padding:9px 36px;display:flex;gap:24px;flex-wrap:wrap;font-size:10.5px;color:var(--t-muted)}.hdr-meta b{color:var(--t-secondary);font-weight:600}
+.nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 36px;display:flex;flex-wrap:wrap;position:sticky;top:0;z-index:100}.nb{padding:12px 15px;background:none;border:none;border-bottom:1px solid transparent;color:var(--t-muted);cursor:pointer;font-family:var(--font);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;transition:all .2s;white-space:nowrap}.nb:hover{color:var(--t-secondary)}.nb.on{color:var(--champagne);border-bottom-color:var(--champagne)}.nb.hl{color:var(--pos)}
+.main{padding:22px 36px;max-width:1700px;margin:0 auto}.pg{display:none}.pg.on{display:block}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:16px}.kpi{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px 13px;position:relative;overflow:hidden}.kpi::before{content:'';position:absolute;left:0;top:0;width:2px;height:100%;background:var(--champagne)}.kpi.green::before{background:var(--pos)}.kpi.red::before{background:var(--neg)}.kpi.blue::before{background:#6A8EC0}.kpi.silver::before{background:var(--silver)}.kpi.warn::before{background:var(--warn)}.kpi-label{font-size:9px;color:var(--t-muted);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:6px}.kpi-val{font-size:22px;font-weight:700;color:var(--t-primary);line-height:1}.kpi-val.champ{color:var(--champagne)}.kpi-val.green{color:#6EC090}.kpi-val.red{color:#D07070}.kpi-val.warn{color:#D09050}.kpi-val.blue{color:#8AAEDC}.kpi-sub{font-size:10px;color:var(--t-muted);margin-top:5px}
+.ref-bar{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px 0;margin-bottom:16px;display:flex;flex-wrap:wrap}.ref-item{padding:0 20px;border-right:1px solid var(--border);text-align:center;flex:1;min-width:110px}.ref-item:last-child{border-right:none}.ref-label{font-size:9px;color:var(--t-muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px}.ref-val{font-size:15px;font-weight:700;color:var(--champagne)}.ref-sub{font-size:9.5px;color:var(--t-muted);margin-top:3px}
+.panel{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:18px;margin-bottom:14px}.panel-title{font-size:10px;font-weight:700;color:var(--t-secondary);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}.panel-title .tag{font-size:9.5px;color:var(--t-muted);text-transform:none;letter-spacing:0;background:var(--bg4);padding:2px 8px;border-radius:2px;border:1px solid var(--border)}
+.cg1{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px}.cg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.cg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}.cg2-1{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}.cg1-2{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px}.chart-card{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px}.chart-title{font-size:9.5px;font-weight:700;color:var(--t-muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px}.ch{position:relative}.ch.h140{height:140px}.ch.h160{height:160px}.ch.h180{height:180px}.ch.h200{height:200px}.ch.h220{height:220px}.ch.h240{height:240px}.ch.h260{height:260px}.ch.h280{height:280px}.ch.h300{height:300px}.ch.h340{height:340px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:11.5px}thead th{background:var(--bg);color:var(--t-label);padding:8px 11px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border2);white-space:nowrap}thead th.left{text-align:left}tbody td{padding:7px 11px;text-align:center;border-bottom:1px solid var(--border3);color:var(--t-secondary)}tbody td.left{text-align:left;font-weight:600;color:var(--t-primary)}tbody td.left-n{text-align:left;color:var(--t-secondary)}tbody tr:hover td{background:rgba(255,255,255,.02)}tfoot td{background:var(--bg);color:var(--champagne);font-weight:700;padding:8px 11px;text-align:center;border-top:1px solid var(--border2)}tfoot td.left{text-align:left}.row-a{background:rgba(106,142,192,.025)}.row-b{background:rgba(74,154,112,.025)}.row-c{background:rgba(200,169,106,.025)}.row-d{background:rgba(160,80,64,.025)}
+.badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:9.5px;font-weight:700;white-space:nowrap;letter-spacing:.3px}.b-ok{background:rgba(74,154,112,.15);color:#6EC090;border:1px solid rgba(74,154,112,.25)}.b-warn{background:rgba(160,64,64,.15);color:#D07070;border:1px solid rgba(160,64,64,.25)}.b-mid{background:rgba(184,122,56,.15);color:#D09050;border:1px solid rgba(184,122,56,.25)}.b-blue{background:rgba(106,142,192,.12);color:#8AAEDC;border:1px solid rgba(106,142,192,.25)}.b-champ{background:rgba(200,169,106,.12);color:var(--champ2);border:1px solid rgba(200,169,106,.25)}.b-muted{background:rgba(74,86,104,.2);color:var(--t-muted);border:1px solid rgba(74,86,104,.3)}
+.pb{background:var(--bg);border-radius:2px;height:5px;overflow:hidden;min-width:60px;display:inline-block;vertical-align:middle}.pf{height:100%;border-radius:2px}.pf-ok{background:var(--pos)}.pf-mid{background:var(--warn)}.pf-bad{background:var(--neg)}
+.fbar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}.fb-lbl{font-size:9px;font-weight:700;color:var(--t-muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px}.fb{padding:5px 11px;border-radius:2px;border:1px solid var(--border);background:var(--bg4);cursor:pointer;font-size:10.5px;font-weight:600;color:var(--t-muted);transition:all .2s;font-family:var(--font);letter-spacing:.3px}.fb:hover,.fb.on{background:var(--champ-dim);border-color:rgba(200,169,106,.35);color:var(--champagne)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;align-items:center}.le{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t-muted)}.ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.split-card{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:20px}.split-head{font-size:13px;font-weight:700;border-bottom:1px solid;padding-bottom:11px;margin-bottom:13px;letter-spacing:.3px}.split-card.v1 .split-head{border-color:rgba(106,142,192,.5);color:#8AAEDC}.split-card.v2 .split-head{border-color:rgba(200,169,106,.5);color:var(--champagne)}.split-card.v3 .split-head{border-color:rgba(74,154,112,.5);color:#6EC090}.split-card.v4 .split-head{border-color:rgba(160,64,64,.5);color:#D07070}.split-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border3)}.split-row:last-child{border:none}.split-lbl{font-size:11px;color:var(--t-muted)}.split-val{font-size:13px;font-weight:700;color:var(--t-primary)}.split-val.good{color:#6EC090}.split-val.warn{color:var(--champagne)}.split-val.bad{color:#D07070}
+.opc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}.opc{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:18px;border-left:2px solid}.opc.crit{border-left-color:var(--neg)}.opc.high{border-left-color:var(--warn)}.opc.med{border-left-color:var(--champagne)}.opc.low{border-left-color:var(--pos)}.opc-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}.opc-title{font-size:12px;font-weight:600;color:var(--t-primary)}.prio{font-size:9px;font-weight:700;padding:2px 7px;border-radius:2px;white-space:nowrap;flex-shrink:0;letter-spacing:.5px;text-transform:uppercase}.prio.crit{background:rgba(160,64,64,.18);color:#D07070;border:1px solid rgba(160,64,64,.3)}.prio.high{background:rgba(184,122,56,.18);color:#D09050;border:1px solid rgba(184,122,56,.3)}.prio.med{background:rgba(200,169,106,.12);color:var(--champ2);border:1px solid rgba(200,169,106,.3)}.prio.low{background:rgba(74,154,112,.15);color:#6EC090;border:1px solid rgba(74,154,112,.3)}.opc-desc{font-size:11px;color:var(--t-secondary);line-height:1.65;margin-bottom:8px}.opc-impact{font-size:11px;color:var(--silver);background:rgba(154,170,187,.06);border-radius:3px;padding:5px 9px;margin-bottom:7px;border:1px solid rgba(154,170,187,.12)}.opc-actions{padding-left:13px}.opc-actions li{font-size:11px;color:var(--t-secondary);margin-bottom:3px;line-height:1.5}
+.note{background:rgba(106,142,192,.05);border:1px solid rgba(106,142,192,.15);border-radius:3px;padding:11px 15px;margin-bottom:13px;font-size:11px;color:var(--t-secondary);line-height:1.7}.alert{background:rgba(200,169,106,.05);border:1px solid rgba(200,169,106,.15);border-radius:3px;padding:11px 15px;margin-bottom:13px;font-size:11px;color:var(--t-secondary);line-height:1.7}.danger{background:rgba(160,64,64,.05);border:1px solid rgba(160,64,64,.15);border-radius:3px;padding:11px 15px;margin-bottom:13px;font-size:11px;color:var(--t-secondary);line-height:1.7}.note b{color:#8AAEDC}.alert b{color:var(--champagne)}.danger b{color:#D07070}
+.matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.mc{background:var(--bg4);border:1px solid var(--border);border-radius:3px;padding:14px}.mc-title{font-size:10.5px;font-weight:700;margin-bottom:9px;letter-spacing:.3px}.mc.q1 .mc-title{color:#D07070}.mc.q2 .mc-title{color:#D09050}.mc.q3 .mc-title{color:#6EC090}.mc.q4 .mc-title{color:#8AAEDC}.mc ul{padding-left:14px}.mc li{font-size:11px;color:var(--t-secondary);margin-bottom:4px;line-height:1.5}
+.of-wrap{background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:12px}.of-header{font-size:10px;font-weight:700;color:var(--champagne);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}.of-item{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px solid var(--border3)}.of-item:last-child{border-bottom:none}.of-badge{border-radius:3px;text-align:center;min-width:60px;flex-shrink:0;padding:6px 10px;font-size:13px;font-weight:800}.of-badge.red{background:rgba(160,64,64,.18);border:1px solid rgba(160,64,64,.3);color:#D07070}.of-badge.warn{background:rgba(184,122,56,.18);border:1px solid rgba(184,122,56,.3);color:#D09050}.of-badge.green{background:rgba(74,154,112,.18);border:1px solid rgba(74,154,112,.3);color:#6EC090}.of-body{flex:1}.of-title{font-size:12px;font-weight:600;color:var(--t-primary);margin-bottom:4px}.of-desc{font-size:11px;color:var(--t-secondary);line-height:1.6}.of-tag{display:inline-block;font-size:10px;color:var(--champagne);background:var(--champ-dim);border:1px solid rgba(200,169,106,.2);border-radius:2px;padding:2px 8px;margin-top:5px}
+.tbl-section td{background:rgba(200,169,106,.04);color:var(--champagne);font-size:9px;letter-spacing:1.2px;text-transform:uppercase;padding:6px 11px}.up{color:#6EC090;font-weight:700}.down{color:#D07070;font-weight:700}.flat{color:var(--t-muted)}.delta-up{color:#D07070;font-weight:700;font-size:10.5px}.delta-down{color:#6EC090;font-weight:700;font-size:10.5px}.delta-eq{color:var(--t-muted);font-size:10.5px}
+.footer{background:var(--bg2);border-top:1px solid var(--border);padding:12px 36px;font-size:10px;color:var(--t-muted);text-align:center;margin-top:20px;letter-spacing:.5px}.footer b{color:var(--t-secondary)}
+@media(max-width:960px){.cg2,.cg3,.cg2-1,.cg1-2,.split-grid,.opc-grid,.matrix-grid{grid-template-columns:1fr}.main{padding:12px 14px}.hdr-top{padding:12px 14px}.hdr-meta{padding:8px 14px;gap:12px}.nav{padding:0 8px}}`;
+
 const SHEETS_ID='15_d38sh-a3wGKxGphOMEmyy9dnbml4ZuIG3VH1SXHQU';
 const SHEETS_KEY='AIzaSyCsyeIBzFPi9ZjIZKcWiDfMQyi7JcKXnEA';
 const SHEETS_BASE=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}`;
@@ -229,6 +253,7 @@ let state={
   memoryOn:true,
   syncStatus:'idle',
   firstRun:!S.get('wos_initialized'),
+  attachedFile:null,
 };
 // load per-module chats
 MODULES.forEach(m=>{state.chats[m.id]=S.get('chat_'+m.id)||[]});
@@ -342,7 +367,37 @@ function getPrompt(id){
   const ctx=recent?`\nHISTÓRICO RECENTE:\n${recent}`:'';
   const prompts={
     financas:`Você é o analista financeiro pessoal de ${p.name||'Wallace'}. Contexto: ${p.financialContext||'Profissional buscando independência financeira no Brasil.'}. Categorize gastos, aponte excessos, sugira otimizações com números reais, projete patrimônio. Se pedirem planilha use [GERAR_CSV: título].${ctx} Responda em português.`,
-    relatorio:`Você é especialista em operações industriais para ${p.name||'Wallace'}, Líder de Oficina na NOV Brazil (Riser Repair). Setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição. Organize dados em formato executivo, calcule KPIs, identifique bloqueios, crie plano de ação. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
+    relatorio:`Você é especialista em relatórios executivos industriais para ${p.name||'Wallace'}, Workshop Leader na NOV Brazil (Riser Repair). Setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição.
+
+Ao receber um documento de apontamento: extraia todos os dados, calcule KPIs reais, identifique desvios, bloqueios e destaques positivos, e gere um relatório executivo completo.
+
+Para gerar o relatório use [GERAR_RELATORIO: Título do Relatório] e escreva HTML completo usando EXATAMENTE estas classes do template dark corporativo NOV:
+
+ESTRUTURA DE ABAS: <div class="nav"><button class="nb on" onclick="pg('p1',this)">Dashboard</button><button class="nb" onclick="pg('p2',this)">Setores</button></div> + <div class="main"><div class="pg on" id="pg-p1">...</div><div class="pg" id="pg-p2">...</div></div>
+
+KPIs: <div class="kpi-row"><div class="kpi green"><div class="kpi-label">HORAS TRABALHADAS</div><div class="kpi-val green">240h</div><div class="kpi-sub">contexto</div></div></div>
+Cores KPI: green=positivo, red=crítico, warn=atenção, blue=informativo, champ=principal (padrão)
+
+PAINEL/TABELA: <div class="panel"><div class="panel-title">Título <span class="tag">detalhe</span></div><div class="tw"><table><thead><tr><th class="left">Colaborador</th><th>HH</th><th>Status</th></tr></thead><tbody><tr class="row-a"><td class="left">Nome</td><td>40h</td><td><span class="badge b-ok">OK</span></td></tr></tbody><tfoot><tr><td class="left">TOTAL</td><td>000h</td><td>—</td></tr></tfoot></table></div></div>
+
+DESVIOS/OFENSORES: <div class="of-wrap"><div class="of-header">Principais Desvios</div><div class="of-item"><div class="of-badge red">−8h</div><div class="of-body"><div class="of-title">Nome</div><div class="of-desc">Descrição do desvio e causa raiz.</div><span class="of-tag">Impacto: 8h perdidas</span></div></div></div>
+
+OPORTUNIDADES/AÇÕES: <div class="opc-grid"><div class="opc crit"><div class="opc-hdr"><div class="opc-title">Ação Crítica</div><span class="prio crit">Crítico</span></div><div class="opc-desc">Descrição.</div><div class="opc-impact">Prazo: DD/MM · Resp: Nome</div><ul class="opc-actions"><li>Ação específica</li></ul></div></div>
+Prioridades: crit, high, med, low
+
+MATRIX 2x2: <div class="matrix-grid"><div class="mc q1"><div class="mc-title">🔴 Urgente</div><ul><li>item</li></ul></div><div class="mc q2"><div class="mc-title">🟡 Atenção</div><ul><li>item</li></ul></div><div class="mc q3"><div class="mc-title">🟢 OK</div><ul><li>item</li></ul></div><div class="mc q4"><div class="mc-title">🔵 Monitorar</div><ul><li>item</li></ul></div></div>
+
+SPLIT CARDS (turnos/áreas): <div class="split-grid"><div class="split-card v1"><div class="split-head">1° Turno</div><div class="split-row"><span class="split-lbl">Label</span><span class="split-val good">000</span></div></div><div class="split-card v2"><div class="split-head">2° Turno</div>...</div></div>
+
+ALERTAS: <div class="alert"><b>Atenção:</b> texto</div> | <div class="danger"><b>Crítico:</b> texto</div> | <div class="note"><b>Info:</b> texto</div>
+
+BADGES: <span class="badge b-ok">OK</span> | b-warn=Crítico | b-mid=Atenção | b-blue=Info | b-champ=Destaque
+
+DELTA: <span class="delta-down">▼ −12%</span>(melhora) | <span class="delta-up">▲ +8%</span>(piora) | <span class="delta-eq">—</span>
+
+BARRA: <div class="pb" style="width:80px"><div class="pf pf-ok" style="width:75%"></div></div> (pf-ok=verde, pf-mid=laranja, pf-bad=vermelho)
+
+Sempre gere relatório com pelo menos: Dashboard (KPIs + tabela geral), Setores (split por área), Desvios (ofensores + matrix), Plano de Ação (opc-grid).${ctx} Responda em português.`,
     metas:`Você é o coach pessoal de ${p.name||'Wallace'}. Metas: ${p.goals||'Fitness, inglês fluente, SaaS no ar, carreira gerencial, independência financeira.'}. Avalie progresso honestamente, identifique o maior bloqueio, proponha 3 ações impactantes para a semana. Seja direto como mentor experiente.${ctx} Responda em português.`,
     saas:`Você é arquiteto de SaaS trabalhando com ${p.name||'Wallace'}. Produto: gestão financeira via WhatsApp, stack N8N+Gemini+Evolution API+Google Sheets, assinatura mensal, mercado brasileiro. Contexto: ${p.saasContext||'Em desenvolvimento.'}. Identifique falhas, sugira melhorias, aponte riscos. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
     conteudo:`Você é estrategista de conteúdo para ${p.name||'Wallace'}, líder técnico offshore (NOV) e empreendedor SaaS brasileiro. Para cada tema gere: 1) Post LinkedIn (storytelling, 150-200 palavras, CTA) 2) Legenda Instagram (engajante, hashtags) 3) Variação alternativa 4) Melhor horário. Responda em português.`,
@@ -369,6 +424,56 @@ function makeHTML(title,content){
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>${title}</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:40px auto;padding:0 24px;line-height:1.7;color:#1a1a2e}h1,h2{color:#2d2d6a}p{margin:6px 0}li{margin:4px 0}</style></head><body><h1>${title}</h1><p style="color:#888;font-size:.85rem">Gerado por Wallace OS · ${new Date().toLocaleString('pt-BR')}</p>${body}</body></html>`;
   return{blob:new Blob([html],{type:'text/html;charset=utf-8'}),name:title.replace(/\s+/g,'_')+'.html'};
 }
+function makeRelatorioHTML(title,body){
+  const p=state.profile;
+  const html=`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${title} · NOV Brazil</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/script>
+<style>${RELATORIO_CSS}</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-accent"></div>
+  <div class="hdr-top">
+    <div class="logo-box">NOV</div>
+    <div class="hdr-divider"></div>
+    <div class="hdr-info">
+      <h1>${title}</h1>
+      <div class="sub">
+        <span>Riser Repair · NOV Brazil</span>
+        <span>${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</span>
+        <span><span class="pill green">✓ Gerado por Wallace OS</span></span>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div>Elaborado por</div>
+      <div class="name">${p.name||'Wallace Morais'}</div>
+      <div>Workshop Leader</div>
+      <div>${new Date().toLocaleString('pt-BR')}</div>
+    </div>
+  </div>
+</div>
+${body}
+<div class="footer">
+  <b>${title}</b> · NOV Brazil · Riser Repair · Gerado por Wallace OS · ${new Date().toLocaleString('pt-BR')}
+</div>
+<script>
+function pg(id,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+<\/script>
+</body>
+</html>`;
+  return{blob:new Blob([html],{type:'text/html;charset=utf-8'}),name:title.replace(/\s+/g,'_')+'.html'};
+}
+
 function downloadFile({blob,name}){
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -545,6 +650,13 @@ function renderChat(){
     <div class="input-area">
       <div class="input-tools">
         <button class="tool-btn ${state.memoryOn?'on':''}" onclick="toggleMemory()">◈ Memória</button>
+        ${mod.id==='relatorio'?`
+          <label class="tool-btn" style="cursor:pointer" title="Anexar documento (.html, .csv, .txt)">
+            ↑ Anexar
+            <input type="file" accept=".html,.htm,.csv,.txt,.json" style="display:none" onchange="attachFile(event)"/>
+          </label>
+          ${state.attachedFile?`<span class="tool-btn on" style="color:#60a5fa;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${state.attachedFile.name}">📎 ${state.attachedFile.name} <button onclick="state.attachedFile=null;renderPage()" style="background:none;border:none;color:#60a5fa;cursor:pointer;font-size:0.7rem">✕</button></span>`:''}
+        `:''}
         <button class="tool-btn" onclick="genFile()">↓ Gerar arquivo</button>
         ${msgs.length>0?`<button class="tool-btn" onclick="clearChat()">✕ Limpar</button>`:''}
       </div>
@@ -610,7 +722,13 @@ function sendMsg(){
 
 async function doSend(text,mod){
   const msgs=state.chats[mod.id]||[];
-  const newMsgs=[...msgs,{role:'user',content:text}];
+  let fullText=text;
+  if(state.attachedFile){
+    fullText=`[DOCUMENTO ANEXADO: ${state.attachedFile.name}]\n${state.attachedFile.content}\n[/DOCUMENTO ANEXADO]\n\n${text}`;
+    state.attachedFile=null;
+    renderPage();
+  }
+  const newMsgs=[...msgs,{role:'user',content:fullText}];
   state.chats[mod.id]=newMsgs;
   S.set('chat_'+mod.id,newMsgs.slice(-30));
   // show user msg + loading
@@ -634,14 +752,18 @@ async function doSend(text,mod){
 
     // detect file gen commands
     let fileObj=null;
-    if(reply.includes('[GERAR_CSV:')){
+    if(reply.includes('[GERAR_RELATORIO:')){
+      const t=reply.match(/\[GERAR_RELATORIO:\s*(.+?)\]/)?.[1]||'Relatório NOV';
+      const body=reply.replace(/\[GERAR_RELATORIO:[^\]]+\]/g,'').trim();
+      fileObj=makeRelatorioHTML(t,body);
+    } else if(reply.includes('[GERAR_CSV:')){
       const t=reply.match(/\[GERAR_CSV:\s*(.+?)\]/)?.[1]||'Relatório';
       fileObj=makeCSV(t,reply.replace(/\[GERAR_CSV:[^\]]+\]/g,''));
     } else if(reply.includes('[GERAR_HTML:')){
       const t=reply.match(/\[GERAR_HTML:\s*(.+?)\]/)?.[1]||'Documento';
       fileObj=makeHTML(t,reply.replace(/\[GERAR_HTML:[^\]]+\]/g,''));
     }
-    const clean=reply.replace(/\[(GERAR_CSV|GERAR_HTML):[^\]]+\]/g,'').trim();
+    const clean=reply.replace(/\[(GERAR_RELATORIO|GERAR_CSV|GERAR_HTML):[^\]]+\]/g,'').trim();
     const finalMsgs=[...newMsgs,{role:'assistant',content:clean}];
     state.chats[mod.id]=finalMsgs;
     S.set('chat_'+mod.id,finalMsgs.slice(-30));
@@ -689,6 +811,19 @@ function dlFile(key){
 function genFile(){
   const ta=document.getElementById('chat-input');
   if(ta)ta.value='Com base no que discutimos, gere um documento completo para baixar.';
+}
+
+function attachFile(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    state.attachedFile={name:file.name,content:e.target.result};
+    renderPage();
+    const ta=document.getElementById('chat-input');
+    if(ta&&!ta.value)ta.value='Analise este documento e gere o relatório executivo completo no template NOV.';
+  };
+  reader.readAsText(file,'UTF-8');
 }
 
 // ── MEMORIA ───────────────────────────────────────────────────────────────
