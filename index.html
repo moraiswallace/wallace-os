@@ -366,7 +366,11 @@ function getPrompt(id){
   const recent=state.history.filter(h=>h.module===id).slice(-5).map(h=>`[${new Date(h.ts).toLocaleDateString('pt-BR')}] ${h.summary}`).join('\n');
   const ctx=recent?`\nHISTÓRICO RECENTE:\n${recent}`:'';
   const prompts={
-    financas:`Você é o analista financeiro pessoal de ${p.name||'Wallace'}. Contexto: ${p.financialContext||'Profissional buscando independência financeira no Brasil.'}. Categorize gastos, aponte excessos, sugira otimizações com números reais, projete patrimônio. Se pedirem planilha use [GERAR_CSV: título].${ctx} Responda em português.`,
+    financas:`Você é o analista financeiro pessoal de ${p.name||'Wallace'}. Contexto: ${p.financialContext||'Profissional buscando independência financeira no Brasil.'}.
+
+FORMATO DE NÚMEROS: sempre use e interprete o padrão brasileiro — ponto como separador de milhar e vírgula como separador decimal. Exemplos: R$ 1.234,56 = mil duzentos e trinta e quatro reais e cinquenta e seis centavos; R$ 10.000,00 = dez mil reais. Nunca interprete o ponto como separador decimal nem a vírgula como separador de milhar.
+
+Categorize gastos, aponte excessos, sugira otimizações com números reais, projete patrimônio. Sempre exiba valores monetários no formato R$ X.XXX,XX. Se pedirem planilha use [GERAR_CSV: título].${ctx} Responda em português.`,
     relatorio:`Você é especialista em relatórios executivos industriais para ${p.name||'Wallace'}, Workshop Leader na NOV Brazil (Riser Repair). Setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição.
 
 Ao receber um documento de apontamento: extraia todos os dados, calcule KPIs reais, identifique desvios, bloqueios e destaques positivos, e gere um relatório executivo completo.
@@ -399,7 +403,11 @@ BARRA: <div class="pb" style="width:80px"><div class="pf pf-ok" style="width:75%
 
 Sempre gere relatório com pelo menos: Dashboard (KPIs + tabela geral), Setores (split por área), Desvios (ofensores + matrix), Plano de Ação (opc-grid).${ctx} Responda em português.`,
     metas:`Você é o coach pessoal de ${p.name||'Wallace'}. Metas: ${p.goals||'Fitness, inglês fluente, SaaS no ar, carreira gerencial, independência financeira.'}. Avalie progresso honestamente, identifique o maior bloqueio, proponha 3 ações impactantes para a semana. Seja direto como mentor experiente.${ctx} Responda em português.`,
-    saas:`Você é arquiteto de SaaS trabalhando com ${p.name||'Wallace'}. Produto: gestão financeira via WhatsApp, stack N8N+Gemini+Evolution API+Google Sheets, assinatura mensal, mercado brasileiro. Contexto: ${p.saasContext||'Em desenvolvimento.'}. Identifique falhas, sugira melhorias, aponte riscos. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
+    saas:`Você é arquiteto de SaaS trabalhando com ${p.name||'Wallace'}. Produto: gestão financeira via WhatsApp, stack N8N+Gemini+Evolution API+Google Sheets, assinatura mensal, mercado brasileiro. Contexto: ${p.saasContext||'Em desenvolvimento.'}.
+
+FORMATO DE NÚMEROS: o produto opera no mercado brasileiro — use e interprete sempre o padrão BR: ponto como separador de milhar, vírgula como decimal (ex: R$ 1.234,56). Nunca trate ponto como separador decimal ao analisar ou exibir valores.
+
+Identifique falhas, sugira melhorias, aponte riscos. Se pedirem documento use [GERAR_HTML: título].${ctx} Responda em português.`,
     conteudo:`Você é estrategista de conteúdo para ${p.name||'Wallace'}, líder técnico offshore (NOV) e empreendedor SaaS brasileiro. Para cada tema gere: 1) Post LinkedIn (storytelling, 150-200 palavras, CTA) 2) Legenda Instagram (engajante, hashtags) 3) Variação alternativa 4) Melhor horário. Responda em português.`,
     ingles:`You are the English tutor for ${p.name||'Wallace'}, Brazilian engineering professional. Level: ${p.englishLevel||'intermediate'}. Respond in English, correct mistakes, teach 1-2 relevant vocabulary words, offer 1 practice sentence. Be practical and encouraging.`,
     pessoal:`Você é o parceiro de vida pessoal de ${p.name||'Wallace'}. Cuide de rotinas, hábitos, bem-estar físico e mental, organização pessoal e equilíbrio vida-trabalho. Seja empático e direto. Aponte padrões, sugira melhorias concretas e comemore avanços. Contexto geral: ${p.goals||'Busca equilíbrio entre carreira exigente e vida pessoal saudável.'}.${ctx} Responda em português.`,
@@ -477,6 +485,24 @@ function pg(id,btn){
 function downloadFile({blob,name}){
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+// ── NÚMERO BR ─────────────────────────────────────────────────────────────
+// '1.234,56' → 1234.56  |  '1234,56' → 1234.56  |  '1234.56' → 1234.56
+function parseBRNumber(str){
+  if(typeof str!=='string')return NaN;
+  const s=str.trim().replace(/[R$\s]/g,'');
+  // BR format: dot=thousand sep, comma=decimal sep
+  if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))
+    return parseFloat(s.replace(/\./g,'').replace(',','.'));
+  // Only comma as decimal
+  if(/^\d+(,\d+)?$/.test(s))
+    return parseFloat(s.replace(',','.'));
+  return parseFloat(s);
+}
+
+function formatBRNumber(n,decimals=2){
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
 }
 
 // ── FORMAT ────────────────────────────────────────────────────────────────
