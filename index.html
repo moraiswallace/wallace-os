@@ -366,7 +366,7 @@ function getPrompt(id){
   const recent=state.history.filter(h=>h.module===id).slice(-5).map(h=>`[${new Date(h.ts).toLocaleDateString('pt-BR')}] ${h.summary}`).join('\n');
   const ctx=recent?`\nHISTÓRICO RECENTE:\n${recent}`:'';
   const prompts={
-    financas:`Você é o analista financeiro pessoal de ${p.name||'Wallace'}. Contexto: ${p.financialContext||'Profissional buscando independência financeira no Brasil.'}. Categorize gastos, aponte excessos, sugira otimizações com números reais, projete patrimônio. Se pedirem planilha use [GERAR_CSV: título].${ctx} Responda em português.`,
+    financas:`Você é o analista financeiro pessoal de ${p.name||'Wallace'}. Contexto: ${p.financialContext||'Profissional buscando independência financeira no Brasil.'}. IMPORTANTE: use SEMPRE o formato brasileiro de números — vírgula como separador decimal e ponto como separador de milhar (ex: R$ 1.234,56 e NUNCA R$ 1,234.56). Categorize gastos, aponte excessos, sugira otimizações com números reais, projete patrimônio. Se pedirem planilha use [GERAR_CSV: título] e formate os dados como tabela markdown com colunas separadas por pipe (|).${ctx} Responda em português.`,
     relatorio:`Você é especialista em relatórios executivos industriais para ${p.name||'Wallace'}, Workshop Leader na NOV Brazil (Riser Repair). Setores: Mecânico, Pintura, Solda, Tratamento Térmico, Expedição.
 
 Ao receber um documento de apontamento: extraia todos os dados, calcule KPIs reais, identifique desvios, bloqueios e destaques positivos, e gere um relatório executivo completo.
@@ -409,8 +409,18 @@ Sempre gere relatório com pelo menos: Dashboard (KPIs + tabela geral), Setores 
 
 // ── FILE GENERATORS ───────────────────────────────────────────────────────
 function makeCSV(title,content){
-  const rows=[['Wallace OS — '+title],['Gerado em',new Date().toLocaleString('pt-BR')],[''],...content.split('\n').filter(l=>l.trim()).map(l=>[l.replace(/[*#►▸◈]/g,'').trim()])];
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  function parseLine(l){
+    const clean=l.replace(/[*#►▸◈]/g,'').trim();
+    if(clean.startsWith('|')&&clean.endsWith('|')){
+      const cells=clean.slice(1,-1).split('|').map(c=>c.trim());
+      if(cells.every(c=>/^[-:\s]+$/.test(c)))return null;
+      return cells;
+    }
+    return[clean];
+  }
+  const rows=[['Wallace OS — '+title],['Gerado em',new Date().toLocaleString('pt-BR')],[''],
+    ...content.split('\n').filter(l=>l.trim()).map(parseLine).filter(Boolean)];
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
   return{blob:new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}),name:title.replace(/\s+/g,'_')+'.csv'};
 }
 function makeHTML(title,content){
